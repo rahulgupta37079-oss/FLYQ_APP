@@ -211,9 +211,14 @@ export default function ControllerScreen() {
           </View>
         </View>
         
-        <TouchableOpacity onPress={() => setShowSettings(true)} style={styles.settingsButton}>
-          <MaterialIcons name="settings" size={24} color="#fff" />
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity onPress={() => router.push('/features' as any)} style={styles.iconButton}>
+            <MaterialIcons name="stars" size={24} color="#FFD700" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setShowSettings(true)} style={styles.iconButton}>
+            <MaterialIcons name="settings" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </View>
       
       {/* Main control area */}
@@ -374,7 +379,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-  settingsButton: {
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  iconButton: {
     padding: 8,
   },
   controlArea: {
