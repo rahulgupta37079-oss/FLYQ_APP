@@ -2,9 +2,10 @@
 
 **Professional cross-platform mobile drone controller for FLYQ Air and FLYQ Vision ESP32-S3 drones**
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/flyq/drone-controller)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/flyq/drone-controller)
 [![Platform](https://img.shields.io/badge/platform-iOS%20%7C%20Android-green.svg)](https://expo.dev)
 [![License](https://img.shields.io/badge/license-MIT-orange.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/status-Production%20Ready-brightgreen.svg)](https://github.com/flyq/drone-controller)
 
 ---
 
@@ -12,7 +13,9 @@
 
 FLYQ Drone Controller is a feature-rich mobile application that replicates and enhances the LiteWing drone controller, specifically designed for FLYQ brand drones. It provides professional-grade flight controls with advanced features for both beginner and experienced pilots.
 
-### ✨ Key Features
+**⭐ NEW in v2.1:** Camera streaming, flight path recording, multi-drone management, and gesture controls!
+
+### ✨ Core Features (v2.0)
 
 - **🎮 Dual Virtual Joysticks** - Smooth touch controls with haptic feedback
 - **📊 Real-Time Telemetry** - Live thrust, yaw, roll, pitch display at 50Hz
@@ -24,6 +27,13 @@ FLYQ Drone Controller is a feature-rich mobile application that replicates and e
 - **🐛 Debug Mode** - View raw joystick values and angles
 - **🔄 Screen Rotation** - Auto-landscape for optimal control
 - **🛡️ Emergency Stop** - Instant motor cutoff
+
+### 🚀 Advanced Features (v2.1) - **NOW AVAILABLE!**
+
+- **🎥 Camera Streaming** - Live HD video feed from FLYQ Vision (720p@30fps)
+- **🗺️ Flight Path Recording** - Record and replay flights with GPS tracking
+- **🚁 Multiple Drone Management** - Control up to 4 drones with swarm mode
+- **✋ Gesture Controls** - Control drone with phone movements and gestures
 
 ---
 
