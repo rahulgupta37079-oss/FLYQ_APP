@@ -71,6 +71,30 @@ class StatusUpdate(BaseModel):
     client_name: str = "FLYQ_Controller"
 
 
+# v2.1 Feature Models
+class FlightPathPoint(BaseModel):
+    timestamp: int
+    latitude: float
+    longitude: float
+    altitude: float
+    roll: float
+    pitch: float
+    yaw: float
+    thrust: float
+    batteryVoltage: float
+
+
+class SaveFlightPathRequest(BaseModel):
+    name: str
+    points: list[FlightPathPoint]
+
+
+class CameraStreamRequest(BaseModel):
+    drone_ip: str
+    quality: str = "720p"
+    fps: int = 30
+
+
 # API endpoints
 @app.get("/")
 @app.get("/api/")
@@ -216,6 +240,214 @@ async def post_status(status: StatusUpdate):
     return {
         "id": "status-1",
         "client_name": status.client_name,
+        "timestamp": datetime.now().isoformat()
+    }
+
+
+# ========================================
+# v2.1 FEATURES API ENDPOINTS
+# ========================================
+
+# Flight Path Recording
+@app.post("/api/flight-path/save")
+async def save_flight_path(request: SaveFlightPathRequest):
+    """
+    Save a recorded flight path
+    """
+    try:
+        logger.info(f"Saving flight path: {request.name} with {len(request.points)} points")
+        
+        # In production, this would save to database
+        # For now, just return success
+        return {
+            "status": "saved",
+            "id": f"path-{datetime.now().timestamp()}",
+            "name": request.name,
+            "points_count": len(request.points),
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Failed to save flight path: {e}")
+        raise HTTPException(status_code=500, detail=f"Save failed: {str(e)}")
+
+
+@app.get("/api/flight-path/list")
+async def list_flight_paths():
+    """
+    Get list of saved flight paths
+    """
+    # In production, this would query from database
+    return {
+        "paths": [],
+        "count": 0,
+        "timestamp": datetime.now().isoformat()
+    }
+
+
+@app.get("/api/flight-path/{path_id}")
+async def get_flight_path(path_id: str):
+    """
+    Get a specific flight path by ID
+    """
+    # In production, this would query from database
+    return {
+        "id": path_id,
+        "name": "Sample Path",
+        "points": [],
+        "timestamp": datetime.now().isoformat()
+    }
+
+
+@app.delete("/api/flight-path/{path_id}")
+async def delete_flight_path(path_id: str):
+    """
+    Delete a flight path
+    """
+    logger.info(f"Deleting flight path: {path_id}")
+    return {
+        "status": "deleted",
+        "id": path_id,
+        "timestamp": datetime.now().isoformat()
+    }
+
+
+# Camera Streaming
+@app.post("/api/camera/start-stream")
+async def start_camera_stream(request: CameraStreamRequest):
+    """
+    Initialize camera stream from FLYQ Vision drone
+    """
+    try:
+        logger.info(f"Starting camera stream from {request.drone_ip} at {request.quality}@{request.fps}fps")
+        
+        # In production, this would:
+        # 1. Establish WebRTC or RTSP connection
+        # 2. Configure stream parameters
+        # 3. Return stream URL
+        
+        stream_url = f"rtsp://{request.drone_ip}:8554/stream"
+        
+        return {
+            "status": "streaming",
+            "stream_url": stream_url,
+            "quality": request.quality,
+            "fps": request.fps,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Failed to start camera stream: {e}")
+        raise HTTPException(status_code=500, detail=f"Stream start failed: {str(e)}")
+
+
+@app.post("/api/camera/stop-stream")
+async def stop_camera_stream():
+    """
+    Stop camera stream
+    """
+    logger.info("Stopping camera stream")
+    return {
+        "status": "stopped",
+        "timestamp": datetime.now().isoformat()
+    }
+
+
+# Multi-Drone Management
+@app.get("/api/drones/scan")
+async def scan_drones():
+    """
+    Scan for available drones on network
+    """
+    try:
+        logger.info("Scanning for drones")
+        
+        # In production, this would:
+        # 1. Scan WiFi networks for FLYQ SSIDs
+        # 2. Ping drone IPs to check availability
+        # 3. Query drone info
+        
+        # Return mock data for now
+        mock_drones = [
+            {
+                "id": "drone-1",
+                "name": "FLYQ Vision #1",
+                "ip": "192.168.4.1",
+                "ssid": "FLYQ_Vision_01",
+                "model": "FLYQ_Vision",
+                "available": True
+            },
+            {
+                "id": "drone-2",
+                "name": "FLYQ Air #2",
+                "ip": "192.168.4.2",
+                "ssid": "FLYQ_Air_02",
+                "model": "FLYQ_Air",
+                "available": True
+            }
+        ]
+        
+        return {
+            "drones": mock_drones,
+            "count": len(mock_drones),
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Failed to scan drones: {e}")
+        raise HTTPException(status_code=500, detail=f"Scan failed: {str(e)}")
+
+
+@app.post("/api/drones/{drone_id}/connect")
+async def connect_to_drone(drone_id: str):
+    """
+    Connect to a specific drone
+    """
+    logger.info(f"Connecting to drone: {drone_id}")
+    return {
+        "status": "connected",
+        "drone_id": drone_id,
+        "timestamp": datetime.now().isoformat()
+    }
+
+
+@app.post("/api/drones/{drone_id}/disconnect")
+async def disconnect_from_drone(drone_id: str):
+    """
+    Disconnect from a specific drone
+    """
+    logger.info(f"Disconnecting from drone: {drone_id}")
+    return {
+        "status": "disconnected",
+        "drone_id": drone_id,
+        "timestamp": datetime.now().isoformat()
+    }
+
+
+# Gesture Controls
+@app.post("/api/gesture/calibrate")
+async def calibrate_gesture_sensors():
+    """
+    Calibrate gesture sensors
+    """
+    logger.info("Calibrating gesture sensors")
+    
+    # Simulate calibration
+    import asyncio
+    await asyncio.sleep(1)
+    
+    return {
+        "status": "calibrated",
+        "timestamp": datetime.now().isoformat()
+    }
+
+
+@app.post("/api/gesture/command")
+async def send_gesture_command(command: dict):
+    """
+    Send command triggered by gesture
+    """
+    logger.info(f"Gesture command: {command}")
+    return {
+        "status": "executed",
+        "command": command,
         "timestamp": datetime.now().isoformat()
     }
 

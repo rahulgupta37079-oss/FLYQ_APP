@@ -19,11 +19,11 @@ const { width } = Dimensions.get('window');
 export default function FeaturesScreen() {
   const store = useDroneStore();
   
-  // v2.1 Features State
-  const [cameraStreaming, setCameraStreaming] = useState(false);
-  const [flightRecording, setFlightRecording] = useState(false);
-  const [multiDroneMode, setMultiDroneMode] = useState(false);
-  const [gestureControl, setGestureControl] = useState(false);
+  // v2.1 Features State - Now synced with store
+  const cameraStreaming = store.cameraStreamEnabled;
+  const flightRecording = store.flightRecordingEnabled;
+  const multiDroneMode = store.multiDroneEnabled;
+  const gestureControl = store.gestureControlEnabled;
   
   // v3.0 Features State (Future)
   const [fpvMode, setFpvMode] = useState(false);
@@ -31,7 +31,7 @@ export default function FeaturesScreen() {
   const [autoFlight, setAutoFlight] = useState(false);
   const [voiceCommands, setVoiceCommands] = useState(false);
 
-  const handleFeatureToggle = (feature: string, enabled: boolean, setter: (val: boolean) => void) => {
+  const handleFeatureToggle = (feature: string, enabled: boolean, action: () => void) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
     if (enabled) {
@@ -43,14 +43,14 @@ export default function FeaturesScreen() {
           {
             text: 'Enable',
             onPress: () => {
-              setter(true);
+              action();
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             },
           },
         ]
       );
     } else {
-      setter(false);
+      action();
     }
   };
 
@@ -109,7 +109,7 @@ export default function FeaturesScreen() {
             <View style={styles.featureToggle}>
               <Switch
                 value={cameraStreaming}
-                onValueChange={(val) => handleFeatureToggle('Camera Streaming', val, setCameraStreaming)}
+                onValueChange={(val) => handleFeatureToggle('Camera Streaming', val, () => store.setCameraStreamEnabled(val))}
                 trackColor={{ false: '#767577', true: '#2196F3' }}
                 thumbColor={cameraStreaming ? '#fff' : '#f4f3f4'}
               />
@@ -137,7 +137,7 @@ export default function FeaturesScreen() {
             <View style={styles.featureToggle}>
               <Switch
                 value={flightRecording}
-                onValueChange={(val) => handleFeatureToggle('Flight Recording', val, setFlightRecording)}
+                onValueChange={(val) => handleFeatureToggle('Flight Recording', val, () => store.setFlightRecordingEnabled(val))}
                 trackColor={{ false: '#767577', true: '#FF9800' }}
                 thumbColor={flightRecording ? '#fff' : '#f4f3f4'}
               />
@@ -165,7 +165,7 @@ export default function FeaturesScreen() {
             <View style={styles.featureToggle}>
               <Switch
                 value={multiDroneMode}
-                onValueChange={(val) => handleFeatureToggle('Multi-Drone Mode', val, setMultiDroneMode)}
+                onValueChange={(val) => handleFeatureToggle('Multi-Drone Mode', val, () => store.setMultiDroneEnabled(val))}
                 trackColor={{ false: '#767577', true: '#9C27B0' }}
                 thumbColor={multiDroneMode ? '#fff' : '#f4f3f4'}
               />
@@ -193,7 +193,7 @@ export default function FeaturesScreen() {
             <View style={styles.featureToggle}>
               <Switch
                 value={gestureControl}
-                onValueChange={(val) => handleFeatureToggle('Gesture Control', val, setGestureControl)}
+                onValueChange={(val) => handleFeatureToggle('Gesture Control', val, () => store.setGestureControlEnabled(val))}
                 trackColor={{ false: '#767577', true: '#00BCD4' }}
                 thumbColor={gestureControl ? '#fff' : '#f4f3f4'}
               />
