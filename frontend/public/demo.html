@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLYQ Drone Controller - Demo Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .controller {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
+        }
+        
+        .header {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .status-armed {
+            background: #f44336;
+        }
+        
+        .status-disarmed {
+            background: #4CAF50;
+        }
+        
+        .telemetry-bar {
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .telemetry-item {
+            text-align: center;
+        }
+        
+        .telemetry-label {
+            font-size: 0.8em;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+        
+        .telemetry-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .joystick-area {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            padding: 40px;
+            gap: 40px;
+        }
+        
+        .joystick-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .joystick-label {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+        
+        .joystick {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, #1a1a1a, #0a0a0a);
+            border: 3px solid #333;
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .joystick-stick {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #667eea, #4a5fc7);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+            transition: all 0.1s ease;
+            cursor: move;
+        }
+        
+        .joystick-stick:hover {
+            background: radial-gradient(circle at 30% 30%, #7a8ef5, #5a6fd7);
+        }
+        
+        .joystick-values {
+            margin-top: 20px;
+            font-size: 0.9em;
+            opacity: 0.7;
+            text-align: center;
+        }
+        
+        .center-controls {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .emergency-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ff5252, #d32f2f);
+            border: 4px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(255, 82, 82, 0.5);
+            transition: all 0.2s ease;
+        }
+        
+        .emergency-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 30px rgba(255, 82, 82, 0.8);
+        }
+        
+        .emergency-button:active {
+            transform: scale(0.95);
+        }
+        
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .control-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn-arm {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-arm:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .btn-disarm {
+            background: #f44336;
+            color: white;
+        }
+        
+        .btn-disarm:hover {
+            background: #da190b;
+            transform: translateY(-2px);
+        }
+        
+        .demo-note {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 152, 0, 0.9);
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); }
+        }
+        
+        .battery {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .battery-icon {
+            width: 40px;
+            height: 20px;
+            border: 2px solid #4CAF50;
+            border-radius: 3px;
+            position: relative;
+            padding: 2px;
+        }
+        
+        .battery-icon::after {
+            content: '';
+            position: absolute;
+            right: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 10px;
+            background: #4CAF50;
+            border-radius: 0 2px 2px 0;
+        }
+        
+        .battery-fill {
+            height: 100%;
+            background: #4CAF50;
+            border-radius: 1px;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="controller">
+        <div class="header">
+            <h1>
+                <span>🚁</span>
+                FLYQ Drone Controller
+            </h1>
+            <div class="status">
+                <div class="battery">
+                    <div class="battery-icon">
+                        <div class="battery-fill" id="batteryFill" style="width: 85%;"></div>
+                    </div>
+                    <span id="batteryText">4.06V (85%)</span>
+                </div>
+                <div class="status-badge status-disarmed" id="statusBadge">DISARMED</div>
+            </div>
+        </div>
+        
+        <div class="telemetry-bar">
+            <div class="telemetry-item">
+                <div class="telemetry-label">THRUST</div>
+                <div class="telemetry-value" id="thrustValue">0%</div>
+            </div>
+            <div class="telemetry-item">
+                <div class="telemetry-label">YAW</div>
+                <div class="telemetry-value" id="yawValue">0%</div>
+            </div>
+            <div class="telemetry-item">
+                <div class="telemetry-label">ROLL</div>
+                <div class="telemetry-value" id="rollValue">0%</div>
+            </div>
+            <div class="telemetry-item">
+                <div class="telemetry-label">PITCH</div>
+                <div class="telemetry-value" id="pitchValue">0%</div>
+            </div>
+            <div class="telemetry-item">
+                <div class="telemetry-label">CONNECTION</div>
+                <div class="telemetry-value" style="color: #4CAF50;">●  READY</div>
+            </div>
+        </div>
+        
+        <div class="joystick-area">
+            <div class="joystick-container">
+                <div class="joystick-label">LEFT: THRUST / YAW</div>
+                <div class="joystick" id="leftJoystick">
+                    <div class="joystick-stick" id="leftStick"></div>
+                </div>
+                <div class="joystick-values" id="leftValues">
+                    Thrust: 0% | Yaw: 0%
+                </div>
+            </div>
+            
+            <div class="joystick-container">
+                <div class="joystick-label">RIGHT: ROLL / PITCH</div>
+                <div class="joystick" id="rightJoystick">
+                    <div class="joystick-stick" id="rightStick"></div>
+                </div>
+                <div class="joystick-values" id="rightValues">
+                    Roll: 0% | Pitch: 0%
+                </div>
+            </div>
+        </div>
+        
+        <div class="center-controls">
+            <div class="emergency-button" onclick="emergencyStop()">
+                🛑<br>STOP
+            </div>
+            <div class="control-buttons">
+                <button class="control-btn btn-arm" onclick="arm()">ARM</button>
+                <button class="control-btn btn-disarm" onclick="disarm()">DISARM</button>
+            </div>
+        </div>
+        
+        <div class="demo-note">
+            ⚠️ WEB DEMO - Real app is React Native on mobile devices
+        </div>
+    </div>
+    
+    <script>
+        let isArmed = false;
+        
+        function setupJoystick(joystickId, stickId, onMove) {
+            const joystick = document.getElementById(joystickId);
+            const stick = document.getElementById(stickId);
+            const rect = joystick.getBoundingClientRect();
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const maxDistance = (rect.width / 2) - 40;
+            
+            let isDragging = false;
+            
+            stick.addEventListener('mousedown', () => isDragging = true);
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                stick.style.left = '50%';
+                stick.style.top = '50%';
+                onMove(0, 0);
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const rect = joystick.getBoundingClientRect();
+                const x = e.clientX - rect.left - centerX;
+                const y = e.clientY - rect.top - centerY;
+                
+                const distance = Math.sqrt(x * x + y * y);
+                const angle = Math.atan2(y, x);
+                
+                const clampedDistance = Math.min(distance, maxDistance);
+                const clampedX = Math.cos(angle) * clampedDistance;
+                const clampedY = Math.sin(angle) * clampedDistance;
+                
+                stick.style.left = `${centerX + clampedX}px`;
+                stick.style.top = `${centerY + clampedY}px`;
+                
+                const percentX = Math.round((clampedX / maxDistance) * 100);
+                const percentY = Math.round((-clampedY / maxDistance) * 100);
+                
+                onMove(percentX, percentY);
+            });
+        }
+        
+        setupJoystick('leftJoystick', 'leftStick', (x, y) => {
+            document.getElementById('thrustValue').textContent = Math.max(0, y) + '%';
+            document.getElementById('yawValue').textContent = x + '%';
+            document.getElementById('leftValues').textContent = `Thrust: ${Math.max(0, y)}% | Yaw: ${x}%`;
+        });
+        
+        setupJoystick('rightJoystick', 'rightStick', (x, y) => {
+            document.getElementById('rollValue').textContent = x + '%';
+            document.getElementById('pitchValue').textContent = y + '%';
+            document.getElementById('rightValues').textContent = `Roll: ${x}% | Pitch: ${y}%`;
+        });
+        
+        function arm() {
+            if (confirm('⚠️ ARM DRONE?\n\nMotors will start spinning!\n\nMake sure area is clear.')) {
+                isArmed = true;
+                const badge = document.getElementById('statusBadge');
+                badge.textContent = 'ARMED';
+                badge.className = 'status-badge status-armed';
+                console.log('🚁 Drone ARMED');
+            }
+        }
+        
+        function disarm() {
+            isArmed = false;
+            const badge = document.getElementById('statusBadge');
+            badge.textContent = 'DISARMED';
+            badge.className = 'status-badge status-disarmed';
+            console.log('🛑 Drone DISARMED');
+        }
+        
+        function emergencyStop() {
+            disarm();
+            document.getElementById('thrustValue').textContent = '0%';
+            document.getElementById('yawValue').textContent = '0%';
+            document.getElementById('rollValue').textContent = '0%';
+            document.getElementById('pitchValue').textContent = '0%';
+            alert('🛑 EMERGENCY STOP ACTIVATED!\n\nAll motors stopped.');
+            console.log('🚨 EMERGENCY STOP!');
+        }
+        
+        // Simulate battery drain
+        let battery = 85;
+        setInterval(() => {
+            if (isArmed) {
+                battery = Math.max(0, battery - 0.1);
+                const voltage = 3.3 + (battery / 100) * 0.9;
+                document.getElementById('batteryText').textContent = `${voltage.toFixed(2)}V (${Math.round(battery)}%)`;
+                document.getElementById('batteryFill').style.width = battery + '%';
+                
+                if (battery < 20) {
+                    document.getElementById('batteryFill').style.background = '#f44336';
+                    document.querySelector('.battery-icon').style.borderColor = '#f44336';
+                }
+            }
+        }, 1000);
+        
+        console.log('🚁 FLYQ Drone Controller - Demo Interface');
+        console.log('📱 Real app: https://github.com/rahulgupta37079-oss/FLYQ_APP');
+    </script>
+</body>
+</html>
