@@ -22,7 +22,7 @@ export default function Index() {
         <MaterialCommunityIcons name="quadcopter" size={80} color="#2196F3" />
         <Text style={styles.title}>FLYQ</Text>
         <Text style={styles.subtitle}>Drone Controller</Text>
-        <Text style={styles.version}>v2.0.0</Text>
+        <Text style={styles.version}>v2.1.0</Text>
       </View>
 
       {/* Main Menu */}

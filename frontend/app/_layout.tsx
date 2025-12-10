@@ -15,6 +15,11 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="connect" />
         <Stack.Screen name="controller" />
+        <Stack.Screen name="features" />
+        <Stack.Screen name="camera" />
+        <Stack.Screen name="recording" />
+        <Stack.Screen name="multi-drone" />
+        <Stack.Screen name="gestures" />
       </Stack>
     </>
   );
