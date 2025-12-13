@@ -2,11 +2,11 @@
   "expo": {
     "name": "FLYQ Drone Controller",
     "slug": "flyq-drone-controller",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "scheme": "flyq",
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -29,9 +29,7 @@
         "ACCESS_NETWORK_STATE",
         "INTERNET",
         "VIBRATE"
-      ],
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
