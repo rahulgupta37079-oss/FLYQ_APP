@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
+import base64 from 'react-native-base64';
 
 /**
  * UDP Client for communicating with drone via backend proxy
@@ -55,7 +56,7 @@ export class UDPClient {
       for (let i = 0; i < packet.length; i++) {
         binary += String.fromCharCode(packet[i]);
       }
-      const base64Data = btoa(binary);
+      const base64Data = base64.encode(binary);
 
       const response = await axios.post(`${this.backendURL}/api/drone/send`, {
         data: base64Data,

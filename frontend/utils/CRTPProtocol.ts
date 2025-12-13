@@ -3,6 +3,8 @@
  * Used for communicating with Crazyflie-compatible drones (FLYQ Air, FLYQ Vision)
  */
 
+import base64 from 'react-native-base64';
+
 export class CRTPProtocol {
   private static CRTP_PORT_COMMANDER = 0x03;
   private static CRTP_PORT_PLATFORM = 0x0D;
@@ -99,7 +101,7 @@ export class CRTPProtocol {
     for (let i = 0; i < packet.length; i++) {
       binary += String.fromCharCode(packet[i]);
     }
-    return btoa(binary);
+    return base64.encode(binary);
   }
 
   /**
