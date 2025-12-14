@@ -1,9 +1,10 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { ErrorBoundary } from 'expo-router';
 
 export default function RootLayout() {
   return (
-    <>
+    <ErrorBoundary>
       <StatusBar style="light" />
       <Stack
         screenOptions={{
@@ -21,6 +22,6 @@ export default function RootLayout() {
         <Stack.Screen name="multi-drone" />
         <Stack.Screen name="gestures" />
       </Stack>
-    </>
+    </ErrorBoundary>
   );
 }
