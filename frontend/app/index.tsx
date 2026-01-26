@@ -1,16 +1,22 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 const { width } = Dimensions.get('window');
 
 export default function Index() {
+  const router = useRouter();
+  
   const handleNavigation = (route: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push(route as any);
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      router.push(route as any);
+    } catch (error) {
+      console.log('Navigation error:', error);
+    }
   };
 
   return (
