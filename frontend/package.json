@@ -22,8 +22,8 @@
     "expo-router": "~6.0.17",
     "expo-screen-orientation": "^9.0.8",
     "expo-status-bar": "~3.0.9",
-    "react": "19.2.1",
-    "react-dom": "19.2.1",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "react-native-base64": "^0.2.1",
     "react-native-safe-area-context": "~5.6.0",
@@ -32,17 +32,17 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
-    "@types/react": "~19.2.0",
-    "@types/react-dom": "~19.2.0",
+    "@types/react": "~19.1.0",
+    "@types/react-dom": "~19.1.0",
     "typescript": "~5.9.2"
   },
   "private": true,
   "overrides": {
-    "react": "19.2.1",
-    "react-dom": "19.2.1"
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
   },
   "resolutions": {
-    "react": "19.2.1",
-    "react-dom": "19.2.1"
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
   }
 }
