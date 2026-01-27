@@ -6,7 +6,6 @@
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": false,
     "scheme": "flyq",
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -29,8 +28,7 @@
         "ACCESS_NETWORK_STATE",
         "INTERNET",
         "VIBRATE"
-      ],
-      "jsEngine": "jsc"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
