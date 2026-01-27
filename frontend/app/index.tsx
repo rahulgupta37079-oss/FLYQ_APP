@@ -1,18 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
-import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-
-const { width } = Dimensions.get('window');
 
 export default function Index() {
   const router = useRouter();
   
   const handleNavigation = (route: string) => {
     try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       router.push(route as any);
     } catch (error) {
       console.log('Navigation error:', error);
@@ -25,7 +20,7 @@ export default function Index() {
       
       {/* Logo and Title */}
       <View style={styles.header}>
-        <MaterialCommunityIcons name="quadcopter" size={80} color="#2196F3" />
+        <Text style={styles.icon}>🚁</Text>
         <Text style={styles.title}>FLYQ</Text>
         <Text style={styles.subtitle}>Drone Controller</Text>
         <Text style={styles.version}>v2.1.0</Text>
@@ -37,51 +32,38 @@ export default function Index() {
           style={styles.menuButton}
           onPress={() => handleNavigation('/connect')}
         >
-          <View style={styles.menuIcon}>
-            <MaterialIcons name="flight-takeoff" size={32} color="#2196F3" />
-          </View>
           <View style={styles.menuContent}>
-            <Text style={styles.menuTitle}>Start Flight</Text>
+            <Text style={styles.menuTitle}>✈️  Start Flight</Text>
             <Text style={styles.menuDescription}>Connect to your drone</Text>
           </View>
-          <MaterialIcons name="arrow-forward-ios" size={20} color="rgba(255, 255, 255, 0.3)" />
         </TouchableOpacity>
 
         <TouchableOpacity 
           style={styles.menuButton}
           onPress={() => handleNavigation('/features')}
         >
-          <View style={styles.menuIcon}>
-            <MaterialIcons name="stars" size={32} color="#FFD700" />
-          </View>
           <View style={styles.menuContent}>
-            <Text style={styles.menuTitle}>Advanced Features</Text>
+            <Text style={styles.menuTitle}>⭐  Advanced Features</Text>
             <Text style={styles.menuDescription}>Camera, recording & more</Text>
           </View>
-          <MaterialIcons name="arrow-forward-ios" size={20} color="rgba(255, 255, 255, 0.3)" />
         </TouchableOpacity>
 
         <TouchableOpacity 
           style={styles.menuButton}
           onPress={() => handleNavigation('/settings' as any)}
         >
-          <View style={styles.menuIcon}>
-            <MaterialIcons name="settings" size={32} color="#9E9E9E" />
-          </View>
           <View style={styles.menuContent}>
-            <Text style={styles.menuTitle}>Settings</Text>
+            <Text style={styles.menuTitle}>⚙️  Settings</Text>
             <Text style={styles.menuDescription}>Trim, sensitivity & calibration</Text>
           </View>
-          <MaterialIcons name="arrow-forward-ios" size={20} color="rgba(255, 255, 255, 0.3)" />
         </TouchableOpacity>
       </View>
 
       {/* Info Section */}
       <View style={styles.info}>
         <View style={styles.infoCard}>
-          <MaterialIcons name="info-outline" size={20} color="#2196F3" />
           <Text style={styles.infoText}>
-            Ensure your device is connected to the drone's WiFi network before starting.
+            ℹ️  Ensure your device is connected to the drone WiFi network before starting.
           </Text>
         </View>
       </View>
@@ -104,6 +86,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 80,
     paddingBottom: 40,
+  },
+  icon: {
+    fontSize: 80,
   },
   title: {
     fontSize: 48,
@@ -134,13 +119,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
   },
-  menuIcon: {
-    width: 48,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
   menuContent: {
     flex: 1,
   },
@@ -163,7 +141,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(33, 150, 243, 0.1)',
     borderRadius: 12,
     padding: 16,
-    gap: 12,
     borderLeftWidth: 4,
     borderLeftColor: '#2196F3',
   },
