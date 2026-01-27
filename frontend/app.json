@@ -29,7 +29,8 @@
         "ACCESS_NETWORK_STATE",
         "INTERNET",
         "VIBRATE"
-      ]
+      ],
+      "jsEngine": "jsc"
     },
     "web": {
       "favicon": "./assets/favicon.png"
