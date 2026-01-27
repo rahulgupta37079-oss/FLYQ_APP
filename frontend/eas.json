@@ -15,8 +15,13 @@
     },
     "preview": {
       "distribution": "internal",
+      "node": "18.20.5",
+      "env": {
+        "NODE_ENV": "production"
+      },
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
       },
       "ios": {
         "simulator": false
