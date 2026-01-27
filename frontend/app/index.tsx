@@ -1,12 +1,15 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 
 export default function Index() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>FLYQ Drone Controller</Text>
-      <Text style={styles.subtext}>v2.1.0</Text>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.emoji}>🚁</Text>
+        <Text style={styles.title}>FLYQ Drone Controller</Text>
+        <Text style={styles.version}>v2.1.0</Text>
+        <Text style={styles.subtitle}>Professional Edition</Text>
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -14,17 +17,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  content: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
-  text: {
+  emoji: {
+    fontSize: 80,
+    marginBottom: 20,
+  },
+  title: {
     fontSize: 32,
     fontWeight: 'bold',
     color: '#fff',
+    marginBottom: 10,
   },
-  subtext: {
-    fontSize: 16,
+  version: {
+    fontSize: 18,
+    color: '#00bfff',
+    marginBottom: 5,
+  },
+  subtitle: {
+    fontSize: 14,
     color: '#888',
-    marginTop: 10,
   },
 });

@@ -1,15 +1,19 @@
 import { Stack } from 'expo-router';
-import React from 'react';
+import { StatusBar } from 'expo-status-bar';
 
 export default function RootLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: '#000' },
-      }}
-    >
-      <Stack.Screen name="index" />
-    </Stack>
+    <>
+      <StatusBar style="light" />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: '#000' },
+          animation: 'slide_from_right',
+        }}
+      >
+        <Stack.Screen name="index" />
+      </Stack>
+    </>
   );
 }
