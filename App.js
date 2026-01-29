@@ -1,42 +1,66 @@
+import 'react-native-gesture-handler';
+import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+// Import screens
+import HomeScreen from './src/screens/HomeScreen';
+import WiFiScreen from './src/screens/WiFiScreen';
+import ControlScreen from './src/screens/ControlScreen';
+import CameraScreen from './src/screens/CameraScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.emoji}>🚁</Text>
-      <Text style={styles.title}>FLYQ Drone Controller</Text>
-      <Text style={styles.version}>v2.1.0</Text>
-      <Text style={styles.subtitle}>Professional Edition</Text>
-      <StatusBar style="light" />
-    </View>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <StatusBar style="light" />
+        <Stack.Navigator
+          initialRouteName="Home"
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: '#1a1a1a',
+            },
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+            contentStyle: {
+              backgroundColor: '#000',
+            },
+          }}
+        >
+          <Stack.Screen 
+            name="Home" 
+            component={HomeScreen}
+            options={{ title: 'FLYQ Drone Controller' }}
+          />
+          <Stack.Screen 
+            name="WiFi" 
+            component={WiFiScreen}
+            options={{ title: 'WiFi Connection' }}
+          />
+          <Stack.Screen 
+            name="Control" 
+            component={ControlScreen}
+            options={{ title: 'Drone Control' }}
+          />
+          <Stack.Screen 
+            name="Camera" 
+            component={CameraScreen}
+            options={{ title: 'Camera Stream' }}
+          />
+          <Stack.Screen 
+            name="Settings" 
+            component={SettingsScreen}
+            options={{ title: 'Settings' }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emoji: {
-    fontSize: 80,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 10,
-  },
-  version: {
-    fontSize: 18,
-    color: '#00bfff',
-    marginBottom: 5,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#888',
-  },
-});
