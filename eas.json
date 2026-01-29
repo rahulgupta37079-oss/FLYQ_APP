@@ -17,11 +17,13 @@
       "distribution": "internal",
       "node": "18.20.5",
       "env": {
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        "JAVA_HOME": "/usr/lib/jvm/java-17-openjdk-amd64"
       },
       "android": {
         "buildType": "apk",
-        "gradleCommand": ":app:assembleRelease"
+        "gradleCommand": ":app:assembleRelease",
+        "image": "latest"
       },
       "ios": {
         "simulator": false
