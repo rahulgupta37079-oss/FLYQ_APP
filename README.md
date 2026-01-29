@@ -1,25 +1,41 @@
 # 🚁 FLYQ Drone Controller v2.1.0
 
-**Professional Edition** - Complete React Native Mobile App
+**Professional Edition** - LiteWing ESP32-S3 Integration Complete
 
 [![React Native](https://img.shields.io/badge/React_Native-0.81.5-61DAFB?logo=react)](https://reactnative.dev/)
 [![Expo](https://img.shields.io/badge/Expo-54.0.0-000020?logo=expo)](https://expo.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Build](https://img.shields.io/badge/Build-Ready-success)](https://github.com/rahulgupta37079-oss/FLYQ_APP)
+[![Hardware](https://img.shields.io/badge/Hardware-LiteWing_ESP32--S3-orange)](https://circuitdigest.com/wiki/litewing/)
 
 ---
 
 ## 📱 **Overview**
 
-FLYQ Drone Controller is a professional-grade mobile application for controlling and monitoring drone operations. Built with React Native and Expo, it features a complete user interface for WiFi connectivity, flight control, camera streaming, and system settings.
+FLYQ Drone Controller is a **production-ready mobile application** for controlling LiteWing ESP32-S3 based drones. Built with React Native and Expo, it features complete WiFi connectivity, real-time flight control with dual joysticks, live telemetry monitoring, and safety features.
 
 ### ✨ **Key Features**
 
 - 🏠 **Home Dashboard** - Quick access to all features with status monitoring
-- 📡 **WiFi Connection** - Network scanning and drone connectivity management
-- 🎮 **Flight Control** - Dual virtual joysticks with real-time telemetry
-- 📷 **Camera Stream** - Video preview with recording and capture controls
+- 📡 **WiFi Connection** - Real network scanning and LiteWing drone detection
+- 🎮 **Flight Control** - Dual virtual joysticks with 50Hz command rate
+- 📊 **Live Telemetry** - Real-time battery, signal, altitude, GPS data (5Hz)
+- 🔒 **Safety Features** - ARM/DISARM controls with emergency stop
+- 📷 **Camera Stream** - Video preview with recording and capture controls (coming soon)
 - ⚙️ **Settings** - Comprehensive app configuration and system info
+
+### 🎯 **Phase 2 Complete: Real Drone Integration**
+
+**✅ Just Completed:**
+- Real-time connection to LiteWing ESP32-S3 drone via HTTP
+- CRTP protocol integration for flight commands
+- Joystick controls mapped to actual drone motors
+- Live telemetry updates (battery, signal, altitude, GPS)
+- ARM/DISARM and emergency stop functionality
+- Connection status monitoring
+- HTTP API bridge template for firmware
+
+**📖 See [PHASE2_COMPLETE.md](PHASE2_COMPLETE.md) for testing guide**
 
 ---
 
