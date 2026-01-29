@@ -218,13 +218,12 @@ class DroneConnectionService {
 
     try {
       const { roll, pitch, yaw, thrust } = command;
-      const packet = CRTP.createRPYTPacket(roll, pitch, yaw, thrust);
 
-      // Try HTTP endpoint
+      // Send as JSON (HTTP bridge expects JSON format)
       await fetch(`http://${this.droneIP}/command`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/octet-stream' },
-        body: packet,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roll, pitch, yaw, thrust }),
         timeout: 100,
       });
     } catch (error) {
@@ -238,16 +237,61 @@ class DroneConnectionService {
    */
   async sendStopCommand() {
     try {
-      const packet = CRTP.createStopPacket();
-      
-      await fetch(`http://${this.droneIP}/command`, {
+      await fetch(`http://${this.droneIP}/stop`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/octet-stream' },
-        body: packet,
+        headers: { 'Content-Type': 'application/json' },
         timeout: 100,
       });
     } catch (error) {
       console.error('Stop command error:', error);
+    }
+  }
+
+  /**
+   * Arm or disarm drone
+   */
+  async setArmed(armed) {
+    try {
+      const response = await fetch(`http://${this.droneIP}/arm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ armed }),
+        timeout: 1000,
+      });
+
+      if (response.ok) {
+        return { success: true, armed };
+      }
+      
+      return { success: false, message: 'Failed to change arm state' };
+    } catch (error) {
+      console.error('Arm command error:', error);
+      return { success: false, message: error.message };
+    }
+  }
+
+  /**
+   * Get telemetry data from drone
+   */
+  async getTelemetry() {
+    try {
+      const response = await fetch(`http://${this.droneIP}/telemetry`, {
+        method: 'GET',
+        timeout: 1000,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (this.telemetryCallback) {
+          this.telemetryCallback(data);
+        }
+        
+        return data;
+      }
+    } catch (error) {
+      // Silently fail for telemetry
+      return null;
     }
   }
 

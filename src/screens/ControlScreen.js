@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+import droneService from '../utils/DroneConnectionService';
 
 const { width } = Dimensions.get('window');
 const JOYSTICK_SIZE = 120;
@@ -69,22 +70,86 @@ function Joystick({ label, position, onMove }) {
 
 export default function ControlScreen() {
   const [isArmed, setIsArmed] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   const [throttle, setThrottle] = useState(0);
   const [yaw, setYaw] = useState(0);
   const [pitch, setPitch] = useState(0);
   const [roll, setRoll] = useState(0);
+  const [battery, setBattery] = useState(87);
+  const [signal, setSignal] = useState(4);
+
+  useEffect(() => {
+    // Check connection status
+    const status = droneService.getStatus();
+    setIsConnected(status.isConnected);
+
+    // Set up connection callback
+    droneService.onConnectionChange((status) => {
+      setIsConnected(status.connected);
+    });
+
+    // Set up telemetry callback
+    droneService.onTelemetry((data) => {
+      if (data) {
+        setBattery(data.battery || 87);
+        setSignal(data.signal || 4);
+      }
+    });
+
+    // Start polling telemetry if connected
+    const telemetryInterval = setInterval(async () => {
+      if (droneService.getStatus().isConnected) {
+        await droneService.getTelemetry();
+      }
+    }, 200); // 5Hz telemetry updates
+
+    return () => {
+      clearInterval(telemetryInterval);
+    };
+  }, []);
 
   const handleLeftJoystick = ({ x, y }) => {
-    setThrottle(y);
-    setYaw(x);
+    const throttleValue = Math.max(0, Math.min(1, (y + 1) / 2)); // 0 to 1
+    const yawValue = x * 100; // -100 to 100
+    
+    setThrottle(throttleValue);
+    setYaw(yawValue);
+    
+    // Update drone command
+    if (isConnected && isArmed) {
+      droneService.updateCommand({
+        roll,
+        pitch,
+        yaw: yawValue,
+        thrust: throttleValue * 65535, // Convert to 16-bit value
+      });
+    }
   };
 
   const handleRightJoystick = ({ x, y }) => {
-    setRoll(x);
-    setPitch(y);
+    const rollValue = x * 30; // -30 to 30 degrees
+    const pitchValue = y * 30; // -30 to 30 degrees
+    
+    setRoll(rollValue);
+    setPitch(pitchValue);
+    
+    // Update drone command
+    if (isConnected && isArmed) {
+      droneService.updateCommand({
+        roll: rollValue,
+        pitch: pitchValue,
+        yaw,
+        thrust: throttle * 65535,
+      });
+    }
   };
 
-  const handleArm = () => {
+  const handleArm = async () => {
+    if (!isConnected) {
+      Alert.alert('Not Connected', 'Please connect to the drone first.');
+      return;
+    }
+
     Alert.alert(
       isArmed ? 'Disarm Drone?' : 'Arm Drone?',
       isArmed 
@@ -95,29 +160,51 @@ export default function ControlScreen() {
         { 
           text: isArmed ? 'Disarm' : 'Arm',
           style: isArmed ? 'default' : 'destructive',
-          onPress: () => setIsArmed(!isArmed),
+          onPress: async () => {
+            const result = await droneService.setArmed(!isArmed);
+            if (result.success) {
+              setIsArmed(!isArmed);
+            } else {
+              Alert.alert('Error', result.message || 'Failed to change arm state');
+            }
+          },
         },
       ]
     );
   };
 
   const handleTakeoff = () => {
+    if (!isConnected) {
+      Alert.alert('Not Connected', 'Please connect to the drone first.');
+      return;
+    }
     if (!isArmed) {
       Alert.alert('Drone Not Armed', 'Please arm the drone before takeoff.');
       return;
     }
     Alert.alert('Takeoff', 'Initiating automated takeoff sequence...');
+    // TODO: Implement auto-takeoff command
   };
 
   const handleLand = () => {
+    if (!isConnected) {
+      Alert.alert('Not Connected', 'Please connect to the drone first.');
+      return;
+    }
     if (!isArmed) {
       Alert.alert('Drone Not Armed', 'Drone is already landed.');
       return;
     }
     Alert.alert('Landing', 'Initiating automated landing sequence...');
+    // TODO: Implement auto-land command
   };
 
-  const handleEmergencyStop = () => {
+  const handleEmergencyStop = async () => {
+    if (!isConnected) {
+      Alert.alert('Not Connected', 'Drone is not connected.');
+      return;
+    }
+
     Alert.alert(
       'Emergency Stop',
       'This will immediately stop all motors! Use only in emergencies.',
@@ -126,13 +213,26 @@ export default function ControlScreen() {
         { 
           text: 'STOP NOW',
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
+            await droneService.sendStopCommand();
             setIsArmed(false);
+            setThrottle(0);
+            setYaw(0);
+            setPitch(0);
+            setRoll(0);
             Alert.alert('Emergency Stop', 'All motors stopped!');
           },
         },
       ]
     );
+  };
+
+  const getSignalBars = () => {
+    if (!isConnected) return '';
+    if (signal >= 4) return '▂▄▆█';
+    if (signal >= 3) return '▂▄▆';
+    if (signal >= 2) return '▂▄';
+    return '▂';
   };
 
   return (
@@ -146,12 +246,18 @@ export default function ControlScreen() {
           </Text>
         </View>
         <View style={styles.statusItem}>
+          <Text style={styles.statusLabel}>Connection</Text>
+          <Text style={[styles.statusValue, { color: isConnected ? '#4CAF50' : '#666' }]}>
+            {isConnected ? '✓ Connected' : '✗ Not Connected'}
+          </Text>
+        </View>
+        <View style={styles.statusItem}>
           <Text style={styles.statusLabel}>Battery</Text>
-          <Text style={styles.statusValue}>87%</Text>
+          <Text style={styles.statusValue}>{battery}%</Text>
         </View>
         <View style={styles.statusItem}>
           <Text style={styles.statusLabel}>Signal</Text>
-          <Text style={styles.statusValue}>▂▄▆█</Text>
+          <Text style={styles.statusValue}>{getSignalBars()}</Text>
         </View>
       </View>
 
@@ -167,7 +273,7 @@ export default function ControlScreen() {
           <View style={styles.telemetryItem}>
             <Text style={styles.telemetryLabel}>Yaw</Text>
             <Text style={styles.telemetryValue}>
-              {(yaw * 100).toFixed(0)}°
+              {yaw.toFixed(0)}°
             </Text>
           </View>
         </View>
@@ -175,13 +281,13 @@ export default function ControlScreen() {
           <View style={styles.telemetryItem}>
             <Text style={styles.telemetryLabel}>Pitch</Text>
             <Text style={styles.telemetryValue}>
-              {(pitch * 100).toFixed(0)}°
+              {pitch.toFixed(0)}°
             </Text>
           </View>
           <View style={styles.telemetryItem}>
             <Text style={styles.telemetryLabel}>Roll</Text>
             <Text style={styles.telemetryValue}>
-              {(roll * 100).toFixed(0)}°
+              {roll.toFixed(0)}°
             </Text>
           </View>
         </View>

@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
+import droneService from '../utils/DroneConnectionService';
 
 export default function WiFiScreen({ navigation }) {
   const [isScanning, setIsScanning] = useState(false);
@@ -95,29 +96,35 @@ export default function WiFiScreen({ navigation }) {
     }
   };
 
-  const attemptConnection = (network) => {
-    Alert.alert(
-      'Connecting...',
-      `Attempting to connect to ${network.ssid}`,
-      [
-        { 
-          text: 'OK', 
-          onPress: () => {
-            // In real app, use native WiFi connection module
-            Alert.alert(
-              'Success!',
-              `Connected to ${network.ssid}`,
-              [
-                { 
-                  text: 'Go to Control', 
-                  onPress: () => navigation.navigate('Control')
-                },
-              ]
-            );
-          }
-        },
-      ]
-    );
+  const attemptConnection = async (network) => {
+    try {
+      // Show connecting dialog
+      Alert.alert('Connecting...', `Attempting to connect to ${network.ssid}`);
+      
+      // Connect to drone
+      const result = await droneService.connect();
+      
+      if (result.success) {
+        Alert.alert(
+          'Success!',
+          `Connected to ${network.ssid}\n\n${result.message}`,
+          [
+            { 
+              text: 'Go to Control', 
+              onPress: () => navigation.navigate('Control')
+            },
+          ]
+        );
+      } else {
+        Alert.alert(
+          'Connection Failed',
+          result.message || 'Could not connect to drone.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Connection error occurred');
+    }
   };
 
   const getSignalStrength = (signal) => {
