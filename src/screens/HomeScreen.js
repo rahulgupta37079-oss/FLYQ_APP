@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import VideoBackground from '../components/VideoBackground';
 
 export default function HomeScreen({ navigation }) {
   const menuItems = [
@@ -38,7 +39,10 @@ export default function HomeScreen({ navigation }) {
   ];
 
   return (
-    <View style={styles.container}>
+    <VideoBackground 
+      source={require('../../assets/drone_background.mp4')}
+      opacity={0.25}
+    >
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -98,7 +102,7 @@ export default function HomeScreen({ navigation }) {
           </Text>
         </View>
       </ScrollView>
-    </View>
+    </VideoBackground>
   );
 }
 

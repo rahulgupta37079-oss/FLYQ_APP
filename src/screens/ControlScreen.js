@@ -15,6 +15,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import droneService from '../utils/DroneConnectionService';
+import VideoBackground from '../components/VideoBackground';
 
 const { width } = Dimensions.get('window');
 const JOYSTICK_SIZE = 120;
@@ -258,7 +259,11 @@ export default function ControlScreen() {
   };
 
   return (
-    <GestureHandlerRootView style={styles.container}>
+    <VideoBackground 
+      source={require('../../assets/drone_background.mp4')}
+      opacity={0.15}
+    >
+      <GestureHandlerRootView style={styles.container}>
       {/* Status Bar */}
       <View style={styles.statusBar}>
         <View style={styles.statusItem}>
@@ -369,13 +374,14 @@ export default function ControlScreen() {
         </TouchableOpacity>
       </View>
     </GestureHandlerRootView>
+    </VideoBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: 'transparent', // Changed from '#000' to transparent for video
   },
   statusBar: {
     flexDirection: 'row',
