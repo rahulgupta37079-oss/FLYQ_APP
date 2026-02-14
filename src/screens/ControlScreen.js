@@ -16,6 +16,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import droneService from '../utils/DroneConnectionService';
 import VideoBackground from '../components/VideoBackground';
+import { useOrientation } from '../hooks/useOrientation';
 
 const { width } = Dimensions.get('window');
 const JOYSTICK_SIZE = 120;
@@ -83,6 +84,9 @@ export default function ControlScreen() {
   const [roll, setRoll] = useState(0);
   const [battery, setBattery] = useState(87);
   const [signal, setSignal] = useState(4);
+  
+  // Detect orientation changes
+  const { isLandscape, isPortrait, width, height } = useOrientation();
 
   useEffect(() => {
     try {
@@ -265,7 +269,10 @@ export default function ControlScreen() {
     >
       <GestureHandlerRootView style={styles.container}>
       {/* Status Bar */}
-      <View style={styles.statusBar}>
+      <View style={[
+        styles.statusBar, 
+        isLandscape && styles.statusBarLandscape
+      ]}>
         <View style={styles.statusItem}>
           <Text style={styles.statusLabel}>Status</Text>
           <Text style={[styles.statusValue, { color: isArmed ? '#4CAF50' : '#F44336' }]}>
@@ -288,8 +295,101 @@ export default function ControlScreen() {
         </View>
       </View>
 
-      {/* Telemetry Display */}
-      <View style={styles.telemetryContainer}>
+      {/* Main Content - Different layout for landscape */}
+      {isLandscape ? (
+        // LANDSCAPE LAYOUT - Optimized for horizontal viewing
+        <View style={styles.landscapeContainer}>
+          {/* Left Side - Telemetry & Controls */}
+          <View style={styles.landscapeLeftPanel}>
+            {/* Telemetry Display */}
+            <View style={styles.telemetryContainerLandscape}>
+              <View style={styles.telemetryRow}>
+                <View style={styles.telemetryItem}>
+                  <Text style={styles.telemetryLabel}>Throttle</Text>
+                  <Text style={styles.telemetryValue}>
+                    {(throttle * 100).toFixed(0)}%
+                  </Text>
+                </View>
+                <View style={styles.telemetryItem}>
+                  <Text style={styles.telemetryLabel}>Yaw</Text>
+                  <Text style={styles.telemetryValue}>
+                    {yaw.toFixed(0)}°
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.telemetryRow}>
+                <View style={styles.telemetryItem}>
+                  <Text style={styles.telemetryLabel}>Pitch</Text>
+                  <Text style={styles.telemetryValue}>
+                    {pitch.toFixed(0)}°
+                  </Text>
+                </View>
+                <View style={styles.telemetryItem}>
+                  <Text style={styles.telemetryLabel}>Roll</Text>
+                  <Text style={styles.telemetryValue}>
+                    {roll.toFixed(0)}°
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Control Buttons - Vertical in landscape */}
+            <View style={styles.controlButtonsLandscape}>
+              <TouchableOpacity
+                style={[styles.controlButton, styles.takeoffButton]}
+                onPress={handleTakeoff}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.controlButtonText}>🚀</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.controlButton, styles.landButton]}
+                onPress={handleLand}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.controlButtonText}>🛬</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.armButton, isArmed && styles.armButtonActive]}
+                onPress={handleArm}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.armButtonText}>
+                  {isArmed ? '🔓' : '🔒'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.emergencyButton}
+                onPress={handleEmergencyStop}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.emergencyButtonText}>🛑</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Right Side - Joysticks */}
+          <View style={styles.landscapeRightPanel}>
+            <Joystick 
+              label="Throttle / Yaw" 
+              position="left"
+              onMove={handleLeftJoystick}
+            />
+            <Joystick 
+              label="Pitch / Roll" 
+              position="right"
+              onMove={handleRightJoystick}
+            />
+          </View>
+        </View>
+      ) : (
+        // PORTRAIT LAYOUT - Original vertical layout
+        <>
+          {/* Telemetry Display */}
+          <View style={styles.telemetryContainer}>
         <View style={styles.telemetryRow}>
           <View style={styles.telemetryItem}>
             <Text style={styles.telemetryLabel}>Throttle</Text>
@@ -373,6 +473,8 @@ export default function ControlScreen() {
           <Text style={styles.emergencyButtonText}>🛑 EMERGENCY</Text>
         </TouchableOpacity>
       </View>
+        </>
+      )}
     </GestureHandlerRootView>
     </VideoBackground>
   );
@@ -525,5 +627,35 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  // LANDSCAPE MODE STYLES
+  statusBarLandscape: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  landscapeContainer: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  landscapeLeftPanel: {
+    width: '35%',
+    padding: 12,
+    justifyContent: 'space-between',
+  },
+  landscapeRightPanel: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  telemetryContainerLandscape: {
+    backgroundColor: '#0a0a0a',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
+  controlButtonsLandscape: {
+    gap: 8,
   },
 });

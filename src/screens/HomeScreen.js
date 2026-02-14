@@ -1,8 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import VideoBackground from '../components/VideoBackground';
+import { useOrientation } from '../hooks/useOrientation';
 
 export default function HomeScreen({ navigation }) {
+  const { isLandscape } = useOrientation();
   const menuItems = [
     {
       id: 'wifi',
@@ -74,12 +76,20 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         {/* Menu Items */}
-        <View style={styles.menuContainer}>
+        <View style={[
+          styles.menuContainer,
+          isLandscape && styles.menuContainerLandscape
+        ]}>
           <Text style={styles.sectionTitle}>Quick Access</Text>
+          <View style={isLandscape ? styles.menuGridLandscape : null}>
           {menuItems.map((item) => (
             <TouchableOpacity
               key={item.id}
-              style={[styles.menuItem, { borderLeftColor: item.color }]}
+              style={[
+                styles.menuItem, 
+                { borderLeftColor: item.color },
+                isLandscape && styles.menuItemLandscape
+              ]}
               onPress={() => navigation.navigate(item.screen)}
               activeOpacity={0.7}
             >
@@ -93,6 +103,7 @@ export default function HomeScreen({ navigation }) {
               <Text style={styles.menuArrow}>›</Text>
             </TouchableOpacity>
           ))}
+          </View>
         </View>
 
         {/* Footer */}
@@ -243,5 +254,18 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     fontStyle: 'italic',
+  },
+  // LANDSCAPE MODE STYLES
+  menuContainerLandscape: {
+    paddingHorizontal: 40,
+  },
+  menuGridLandscape: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  menuItemLandscape: {
+    width: '48%',
+    marginBottom: 12,
   },
 });

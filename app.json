@@ -17,7 +17,8 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.flyq.dronecontroller"
+      "bundleIdentifier": "com.flyq.dronecontroller",
+      "requireFullScreen": false
     },
     "android": {
       "adaptiveIcon": {
@@ -31,7 +32,8 @@
         "ACCESS_NETWORK_STATE",
         "INTERNET",
         "VIBRATE"
-      ]
+      ],
+      "screenOrientation": "fullSensor"
     },
     "web": {
       "favicon": "./assets/favicon.png"
