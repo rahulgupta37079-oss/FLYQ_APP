@@ -373,16 +373,20 @@ export default function ControlScreen() {
 
           {/* Right Side - Joysticks */}
           <View style={styles.landscapeRightPanel}>
-            <Joystick 
-              label="Throttle / Yaw" 
-              position="left"
-              onMove={handleLeftJoystick}
-            />
-            <Joystick 
-              label="Pitch / Roll" 
-              position="right"
-              onMove={handleRightJoystick}
-            />
+            <View style={styles.joystickContainerLandscape}>
+              <Joystick 
+                label="Throttle / Yaw" 
+                position="left"
+                onMove={handleLeftJoystick}
+              />
+            </View>
+            <View style={styles.joystickContainerLandscape}>
+              <Joystick 
+                label="Pitch / Roll" 
+                position="right"
+                onMove={handleRightJoystick}
+              />
+            </View>
           </View>
         </View>
       ) : (
@@ -628,34 +632,45 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  // LANDSCAPE MODE STYLES
+  // LANDSCAPE MODE STYLES - OPTIMIZED
   statusBarLandscape: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    flexWrap: 'nowrap',
   },
   landscapeContainer: {
     flex: 1,
     flexDirection: 'row',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
   landscapeLeftPanel: {
-    width: '35%',
-    padding: 12,
-    justifyContent: 'space-between',
+    width: '30%',
+    paddingRight: 10,
+    justifyContent: 'flex-start',
   },
   landscapeRightPanel: {
     flex: 1,
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-evenly',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
+    gap: 20,
   },
   telemetryContainerLandscape: {
-    backgroundColor: '#0a0a0a',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
+    backgroundColor: 'rgba(10, 10, 10, 0.8)',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#333',
   },
   controlButtonsLandscape: {
-    gap: 8,
+    gap: 6,
+    marginTop: 8,
+  },
+  joystickContainerLandscape: {
+    alignItems: 'center',
   },
 });
