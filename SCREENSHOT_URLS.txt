@@ -1,0 +1,107 @@
+FLYQ DRONE CONTROLLER - PLAY STORE SCREENSHOTS
+==============================================
+
+📱 SCREENSHOTS (Ready to upload - 7 images in order):
+
+1. Home Screen (Primary)
+   https://www.genspark.ai/api/files/s/uiv5WIuy
+
+2. Drone Control (Portrait)
+   https://www.genspark.ai/api/files/s/rgnhnp3J
+
+3. WiFi Connection
+   https://www.genspark.ai/api/files/s/Ut54BqAX
+
+4. Camera Stream
+   https://www.genspark.ai/api/files/s/bJZRefQR
+
+5. Settings (Top Section)
+   https://www.genspark.ai/api/files/s/mpqp3ZAB
+
+6. Settings (Actions & Support)
+   https://www.genspark.ai/api/files/s/I7OPcmlU
+
+7. Footer with Contact Info
+   https://www.genspark.ai/api/files/s/9hRlui3L
+
+
+🎨 FEATURE GRAPHIC (Choose one - needs resize to 1024×500):
+
+Option 1: Tech Background (RECOMMENDED)
+https://www.genspark.ai/api/files/s/6DE1YG1V
+
+Option 2: Split Design
+https://www.genspark.ai/api/files/s/9Q6wYrIO
+
+Option 3: Futuristic
+https://www.genspark.ai/api/files/s/YSdxdoIa
+
+
+📋 HOW TO DOWNLOAD ALL:
+
+Windows PowerShell:
+------------------
+cd C:\Users\PROFESSORHULK\FLYQ_APP
+mkdir play_store_assets
+cd play_store_assets
+
+# Download all screenshots
+Invoke-WebRequest -Uri "https://www.genspark.ai/api/files/s/uiv5WIuy" -OutFile "1_home.png"
+Invoke-WebRequest -Uri "https://www.genspark.ai/api/files/s/rgnhnp3J" -OutFile "2_control.png"
+Invoke-WebRequest -Uri "https://www.genspark.ai/api/files/s/Ut54BqAX" -OutFile "3_wifi.png"
+Invoke-WebRequest -Uri "https://www.genspark.ai/api/files/s/bJZRefQR" -OutFile "4_camera.png"
+Invoke-WebRequest -Uri "https://www.genspark.ai/api/files/s/mpqp3ZAB" -OutFile "5_settings_top.png"
+Invoke-WebRequest -Uri "https://www.genspark.ai/api/files/s/I7OPcmlU" -OutFile "6_settings_actions.png"
+Invoke-WebRequest -Uri "https://www.genspark.ai/api/files/s/9hRlui3L" -OutFile "7_footer.png"
+
+# Download feature graphic (Option 1 - RECOMMENDED)
+Invoke-WebRequest -Uri "https://www.genspark.ai/api/files/s/6DE1YG1V" -OutFile "feature_graphic.png"
+
+
+Linux/Mac:
+----------
+cd ~/FLYQ_APP
+mkdir play_store_assets
+cd play_store_assets
+
+wget https://www.genspark.ai/api/files/s/uiv5WIuy -O 1_home.png
+wget https://www.genspark.ai/api/files/s/rgnhnp3J -O 2_control.png
+wget https://www.genspark.ai/api/files/s/Ut54BqAX -O 3_wifi.png
+wget https://www.genspark.ai/api/files/s/bJZRefQR -O 4_camera.png
+wget https://www.genspark.ai/api/files/s/mpqp3ZAB -O 5_settings_top.png
+wget https://www.genspark.ai/api/files/s/I7OPcmlU -O 6_settings_actions.png
+wget https://www.genspark.ai/api/files/s/9hRlui3L -O 7_footer.png
+wget https://www.genspark.ai/api/files/s/6DE1YG1V -O feature_graphic.png
+
+
+🔧 RESIZE FEATURE GRAPHIC TO 1024×500:
+
+Option A: Online Tool (Easiest)
+1. Go to https://www.iloveimg.com/resize-image
+2. Upload feature_graphic.png
+3. Set size: 1024 × 500 pixels
+4. Download resized image
+
+Option B: Canva
+1. Go to canva.com
+2. Create custom size: 1024 × 500
+3. Upload feature_graphic.png
+4. Adjust to fit
+5. Download as PNG
+
+Option C: Photoshop/GIMP
+1. Open feature_graphic.png
+2. Image → Image Size
+3. Width: 1024, Height: 500
+4. Export as PNG
+
+
+📤 UPLOAD TO PLAY CONSOLE:
+
+1. Go to: https://play.google.com/console
+2. Select your app: FLYQ Drone Controller
+3. Main Store Listing → Graphics:
+   - Phone screenshots: Upload 1_home.png through 7_footer.png in order
+   - Feature graphic: Upload resized feature_graphic_1024x500.png
+4. Save and continue
+
