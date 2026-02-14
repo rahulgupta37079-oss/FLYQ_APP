@@ -12,6 +12,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  runOnJS,
 } from 'react-native-reanimated';
 import droneService from '../utils/DroneConnectionService';
 
@@ -26,6 +27,7 @@ function Joystick({ label, position, onMove }) {
 
   const gesture = Gesture.Pan()
     .onUpdate((e) => {
+      'worklet';
       const x = Math.max(-JOYSTICK_RANGE, Math.min(JOYSTICK_RANGE, e.translationX));
       const y = Math.max(-JOYSTICK_RANGE, Math.min(JOYSTICK_RANGE, e.translationY));
       
@@ -36,16 +38,19 @@ function Joystick({ label, position, onMove }) {
       const normalizedX = x / JOYSTICK_RANGE;
       const normalizedY = -y / JOYSTICK_RANGE; // Invert Y axis
       
+      // CRITICAL FIX: Use runOnJS to safely call JS functions from worklet
       if (onMove) {
-        onMove({ x: normalizedX, y: normalizedY });
+        runOnJS(onMove)({ x: normalizedX, y: normalizedY });
       }
     })
     .onEnd(() => {
+      'worklet';
       translateX.value = withSpring(0);
       translateY.value = withSpring(0);
       
+      // CRITICAL FIX: Use runOnJS for end callback
       if (onMove) {
-        onMove({ x: 0, y: 0 });
+        runOnJS(onMove)({ x: 0, y: 0 });
       }
     });
 
@@ -79,68 +84,85 @@ export default function ControlScreen() {
   const [signal, setSignal] = useState(4);
 
   useEffect(() => {
-    // Check connection status
-    const status = droneService.getStatus();
-    setIsConnected(status.isConnected);
+    try {
+      // Check connection status
+      const status = droneService.getStatus();
+      setIsConnected(status.isConnected);
 
-    // Set up connection callback
-    droneService.onConnectionChange((status) => {
-      setIsConnected(status.connected);
-    });
+      // Set up connection callback
+      droneService.onConnectionChange((status) => {
+        setIsConnected(status.connected);
+      });
 
-    // Set up telemetry callback
-    droneService.onTelemetry((data) => {
-      if (data) {
-        setBattery(data.battery || 87);
-        setSignal(data.signal || 4);
-      }
-    });
+      // Set up telemetry callback
+      droneService.onTelemetry((data) => {
+        if (data) {
+          setBattery(data.battery || 87);
+          setSignal(data.signal || 4);
+        }
+      });
 
-    // Start polling telemetry if connected
-    const telemetryInterval = setInterval(async () => {
-      if (droneService.getStatus().isConnected) {
-        await droneService.getTelemetry();
-      }
-    }, 200); // 5Hz telemetry updates
+      // Start polling telemetry if connected
+      const telemetryInterval = setInterval(async () => {
+        try {
+          if (droneService.getStatus().isConnected) {
+            await droneService.getTelemetry();
+          }
+        } catch (error) {
+          console.log('Telemetry poll error:', error);
+        }
+      }, 200); // 5Hz telemetry updates
 
-    return () => {
-      clearInterval(telemetryInterval);
-    };
+      return () => {
+        clearInterval(telemetryInterval);
+      };
+    } catch (error) {
+      console.error('Setup error:', error);
+      Alert.alert('Initialization Error', 'Failed to initialize drone controls');
+    }
   }, []);
 
   const handleLeftJoystick = ({ x, y }) => {
-    const throttleValue = Math.max(0, Math.min(1, (y + 1) / 2)); // 0 to 1
-    const yawValue = x * 100; // -100 to 100
-    
-    setThrottle(throttleValue);
-    setYaw(yawValue);
-    
-    // Update drone command
-    if (isConnected && isArmed) {
-      droneService.updateCommand({
-        roll,
-        pitch,
-        yaw: yawValue,
-        thrust: throttleValue * 65535, // Convert to 16-bit value
-      });
+    try {
+      const throttleValue = Math.max(0, Math.min(1, (y + 1) / 2)); // 0 to 1
+      const yawValue = x * 100; // -100 to 100
+      
+      setThrottle(throttleValue);
+      setYaw(yawValue);
+      
+      // Update drone command
+      if (isConnected && isArmed) {
+        droneService.updateCommand({
+          roll,
+          pitch,
+          yaw: yawValue,
+          thrust: throttleValue * 65535, // Convert to 16-bit value
+        });
+      }
+    } catch (error) {
+      console.log('Left joystick error:', error);
     }
   };
 
   const handleRightJoystick = ({ x, y }) => {
-    const rollValue = x * 30; // -30 to 30 degrees
-    const pitchValue = y * 30; // -30 to 30 degrees
-    
-    setRoll(rollValue);
-    setPitch(pitchValue);
-    
-    // Update drone command
-    if (isConnected && isArmed) {
-      droneService.updateCommand({
-        roll: rollValue,
-        pitch: pitchValue,
-        yaw,
-        thrust: throttle * 65535,
-      });
+    try {
+      const rollValue = x * 30; // -30 to 30 degrees
+      const pitchValue = y * 30; // -30 to 30 degrees
+      
+      setRoll(rollValue);
+      setPitch(pitchValue);
+      
+      // Update drone command
+      if (isConnected && isArmed) {
+        droneService.updateCommand({
+          roll: rollValue,
+          pitch: pitchValue,
+          yaw,
+          thrust: throttle * 65535,
+        });
+      }
+    } catch (error) {
+      console.log('Right joystick error:', error);
     }
   };
 

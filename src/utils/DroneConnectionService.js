@@ -207,7 +207,23 @@ class DroneConnectionService {
    * @param {Object} command - {roll, pitch, yaw, thrust}
    */
   updateCommand(command) {
-    this.lastCommand = { ...command };
+    try {
+      // Validate command values
+      if (!command || typeof command !== 'object') {
+        console.warn('Invalid command object');
+        return;
+      }
+      
+      // Safely update with defaults
+      this.lastCommand = {
+        roll: command.roll || 0,
+        pitch: command.pitch || 0,
+        yaw: command.yaw || 0,
+        thrust: command.thrust || 0,
+      };
+    } catch (error) {
+      console.error('updateCommand error:', error);
+    }
   }
 
   /**
