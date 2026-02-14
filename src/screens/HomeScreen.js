@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import VideoBackground from '../components/VideoBackground';
+import AppFooter from '../components/AppFooter';
 import { useOrientation } from '../hooks/useOrientation';
 
 export default function HomeScreen({ navigation }) {
@@ -106,12 +107,8 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Developed for professional drone operations
-          </Text>
-        </View>
+        {/* Footer with Contact Info */}
+        <AppFooter />
       </ScrollView>
     </VideoBackground>
   );

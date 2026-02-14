@@ -7,7 +7,9 @@ import {
   ScrollView,
   Switch,
   Alert,
+  Linking,
 } from 'react-native';
+import AppFooter from '../components/AppFooter';
 
 export default function SettingsScreen() {
   const [darkMode, setDarkMode] = useState(true);
@@ -19,8 +21,36 @@ export default function SettingsScreen() {
   const handleAbout = () => {
     Alert.alert(
       'About FLYQ',
-      'FLYQ Drone Controller v2.1.0\nProfessional Edition\n\nDeveloped for professional drone operations.\n\n© 2024 FLYQ Technologies',
+      'FLYQ Drone Controller v2.1.0\nProfessional Edition\n\nDeveloped for professional drone operations by Passion 3D World.\n\n© 2026 FLYQ',
       [{ text: 'OK' }]
+    );
+  };
+
+  const handleSupport = () => {
+    Alert.alert(
+      'Contact Support',
+      'Choose a contact method:',
+      [
+        {
+          text: 'Call +91 9137361474',
+          onPress: () => Linking.openURL('tel:+919137361474').catch(() => 
+            Alert.alert('Error', 'Could not open phone dialer')
+          ),
+        },
+        {
+          text: 'Email info@passion3dworld.com',
+          onPress: () => Linking.openURL('mailto:info@passion3dworld.com').catch(() => 
+            Alert.alert('Error', 'Could not open email client')
+          ),
+        },
+        {
+          text: 'Visit Website',
+          onPress: () => Linking.openURL('https://passion3dworld.com').catch(() => 
+            Alert.alert('Error', 'Could not open website')
+          ),
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ]
     );
   };
 
@@ -162,10 +192,10 @@ export default function SettingsScreen() {
         />
         
         <ActionButton
-          icon="❓"
-          title="Help & Support"
+          icon="📞"
+          title="Contact Support"
           color="#9C27B0"
-          onPress={() => Alert.alert('Help', 'Visit support.flyq.com for assistance')}
+          onPress={handleSupport}
         />
         
         <ActionButton
@@ -207,15 +237,8 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          Made with ❤️ for drone enthusiasts
-        </Text>
-        <Text style={styles.footerCopyright}>
-          © 2024 FLYQ Technologies
-        </Text>
-      </View>
+      {/* Footer with Contact Info */}
+      <AppFooter />
     </ScrollView>
   );
 }
@@ -373,19 +396,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#aaa',
     fontWeight: '500',
-  },
-  footer: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
-  },
-  footerCopyright: {
-    fontSize: 12,
-    color: '#555',
   },
 });
