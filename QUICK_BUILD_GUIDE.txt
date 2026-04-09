@@ -1,0 +1,238 @@
+═════════════════════════════════════════════════════════════════
+  FLYQ DRONE CONTROLLER - QUICK BUILD GUIDE FOR WINDOWS
+═════════════════════════════════════════════════════════════════
+
+📱 App: FLYQ Drone Controller v2.1.0 Professional Edition
+🔗 Repository: https://github.com/rahulgupta37079-oss/FLYQ_APP
+📅 Updated: 2026-04-09
+
+═════════════════════════════════════════════════════════════════
+  ⚡ FASTEST METHOD - BUILD APK IN 5 MINUTES
+═════════════════════════════════════════════════════════════════
+
+STEP 1: Open Command Prompt (CMD) or PowerShell
+────────────────────────────────────────────────────────────────
+Press Windows Key + R
+Type: cmd
+Press Enter
+
+STEP 2: Navigate to project folder
+────────────────────────────────────────────────────────────────
+cd C:\Users\PROFESSORHULK\FLYQ_APP
+
+STEP 3: Get latest code
+────────────────────────────────────────────────────────────────
+git pull origin main
+npm install
+
+STEP 4: Build APK (First time - one-time setup)
+────────────────────────────────────────────────────────────────
+npx expo prebuild --platform android --clean
+
+STEP 5: Build Debug APK (3-5 minutes)
+────────────────────────────────────────────────────────────────
+cd android
+gradlew assembleDebug
+
+STEP 6: Find your APK
+────────────────────────────────────────────────────────────────
+Location: C:\Users\PROFESSORHULK\FLYQ_APP\android\app\build\outputs\apk\debug\app-debug.apk
+Size: ~30 MB
+
+═════════════════════════════════════════════════════════════════
+  📲 INSTALL APK ON YOUR PHONE
+═════════════════════════════════════════════════════════════════
+
+METHOD A: Via USB Cable
+────────────────────────────────────────────────────────────────
+1. Enable USB Debugging on phone:
+   Settings → About Phone → Tap "Build Number" 7 times
+   Settings → Developer Options → Enable "USB Debugging"
+
+2. Connect phone via USB cable
+
+3. Install APK:
+   cd C:\Users\PROFESSORHULK\FLYQ_APP\android\app\build\outputs\apk\debug
+   adb install app-debug.apk
+
+METHOD B: Transfer APK File
+────────────────────────────────────────────────────────────────
+1. Copy app-debug.apk to phone via:
+   - WhatsApp (send to yourself)
+   - Google Drive
+   - Email
+   - USB cable (copy to Downloads folder)
+
+2. On phone:
+   - Enable "Install unknown apps" for your file manager
+   - Tap the APK file
+   - Tap "Install"
+
+═════════════════════════════════════════════════════════════════
+  🧪 TEST THE APP
+═════════════════════════════════════════════════════════════════
+
+1. Open FLYQ app on your phone
+
+2. Go to WiFi Scan screen
+
+3. Click "Scan for Drones"
+   → Should show real WiFi networks
+   → Networks with "LiteWing", "FLYQ", "ESP32" show drone icon
+
+4. Connect to drone's WiFi hotspot
+
+5. Tap on drone network in FLYQ app
+
+6. Test controls: ARM → TAKEOFF → Joystick → LAND → DISARM
+
+═════════════════════════════════════════════════════════════════
+  🏗️ BUILD RELEASE APK (OPTIMIZED - 25 MB)
+═════════════════════════════════════════════════════════════════
+
+STEP 1: Create Keystore (One-time only)
+────────────────────────────────────────────────────────────────
+cd C:\Users\PROFESSORHULK\FLYQ_APP\android\app
+keytool -genkeypair -v -storetype PKCS12 -keystore flyq-release.keystore -alias flyq-key -keyalg RSA -keysize 2048 -validity 10000
+
+Enter when prompted:
+- Store password: flyq2024secure
+- Key password: flyq2024secure
+- First and Last Name: FLYQ Drone Controller
+- Organization: Passion3D World
+- City: Mumbai
+- State: Maharashtra
+- Country: IN
+
+STEP 2: Build Release APK
+────────────────────────────────────────────────────────────────
+cd C:\Users\PROFESSORHULK\FLYQ_APP\android
+gradlew assembleRelease
+
+Output: android\app\build\outputs\apk\release\app-release.apk (~25 MB)
+
+═════════════════════════════════════════════════════════════════
+  ⚙️ PREREQUISITES (Install once)
+═════════════════════════════════════════════════════════════════
+
+1. ANDROID STUDIO
+   Download: https://developer.android.com/studio
+   Install: Android SDK Platform 34, Build-Tools, Platform-Tools
+
+2. JAVA JDK 17
+   Download: https://adoptium.net/
+   Verify: java -version
+
+3. SET ENVIRONMENT VARIABLES (PowerShell as Admin)
+   
+   # Set JAVA_HOME
+   [System.Environment]::SetEnvironmentVariable("JAVA_HOME", "C:\Program Files\Eclipse Adoptium\jdk-17.x.x-hotspot", "Machine")
+   
+   # Set ANDROID_HOME
+   [System.Environment]::SetEnvironmentVariable("ANDROID_HOME", "$env:LOCALAPPDATA\Android\Sdk", "Machine")
+   
+   # Add to PATH
+   $oldPath = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+   $newPath = "$oldPath;$env:LOCALAPPDATA\Android\Sdk\platform-tools;$env:LOCALAPPDATA\Android\Sdk\tools"
+   [System.Environment]::SetEnvironmentVariable("Path", $newPath, "Machine")
+   
+   ⚠️ Restart CMD/PowerShell after setting variables!
+
+═════════════════════════════════════════════════════════════════
+  🐛 TROUBLESHOOTING
+═════════════════════════════════════════════════════════════════
+
+ERROR: gradlew: command not found
+────────────────────────────────────────────────────────────────
+SOLUTION: Navigate to android folder
+cd C:\Users\PROFESSORHULK\FLYQ_APP\android
+
+ERROR: JAVA_HOME not set
+────────────────────────────────────────────────────────────────
+SOLUTION: Check environment variables
+echo %JAVA_HOME%
+echo %ANDROID_HOME%
+
+If empty, set them using PowerShell (see Prerequisites section)
+
+ERROR: SDK location not found
+────────────────────────────────────────────────────────────────
+SOLUTION: Create android\local.properties file:
+sdk.dir=C:\\Users\\PROFESSORHULK\\AppData\\Local\\Android\\Sdk
+
+ERROR: Build is slow
+────────────────────────────────────────────────────────────────
+SOLUTION: Use Debug build instead of Release
+gradlew assembleDebug    (faster)
+
+ERROR: APK won't install
+────────────────────────────────────────────────────────────────
+SOLUTION: Uninstall old version first
+adb uninstall com.flyq.dronecontroller
+
+═════════════════════════════════════════════════════════════════
+  📋 ALL BUILD COMMANDS
+═════════════════════════════════════════════════════════════════
+
+Clean build files:
+cd C:\Users\PROFESSORHULK\FLYQ_APP\android
+gradlew clean
+
+Build Debug APK (fast, ~3 min):
+gradlew assembleDebug
+
+Build Release APK (optimized, ~5 min):
+gradlew assembleRelease
+
+Build AAB for Play Store:
+gradlew bundleRelease
+
+View all tasks:
+gradlew tasks
+
+Build with detailed logs:
+gradlew assembleDebug --info
+gradlew assembleDebug --stacktrace
+
+═════════════════════════════════════════════════════════════════
+  📁 OUTPUT LOCATIONS
+═════════════════════════════════════════════════════════════════
+
+Debug APK:
+C:\Users\PROFESSORHULK\FLYQ_APP\android\app\build\outputs\apk\debug\app-debug.apk
+
+Release APK:
+C:\Users\PROFESSORHULK\FLYQ_APP\android\app\build\outputs\apk\release\app-release.apk
+
+Release AAB (Play Store):
+C:\Users\PROFESSORHULK\FLYQ_APP\android\app\build\outputs\bundle\release\app-release.aab
+
+═════════════════════════════════════════════════════════════════
+  📞 SUPPORT
+═════════════════════════════════════════════════════════════════
+
+Email: info@passion3dworld.com
+Phone: +91 9137361474
+Website: https://passion3dworld.com
+GitHub: https://github.com/rahulgupta37079-oss/FLYQ_APP
+
+═════════════════════════════════════════════════════════════════
+  ⏱️ BUILD TIME COMPARISON
+═════════════════════════════════════════════════════════════════
+
+CMD Debug APK:        ~3 minutes  (30 MB) ⚡ FASTEST
+CMD Release APK:      ~5 minutes  (25 MB) ⭐ RECOMMENDED
+Android Studio:       ~5 minutes  (30 MB)
+Expo EAS Cloud:      ~20 minutes  (25 MB)
+
+═════════════════════════════════════════════════════════════════
+
+🎯 QUICK START: Just copy these commands into CMD:
+
+cd C:\Users\PROFESSORHULK\FLYQ_APP
+git pull origin main
+npm install
+cd android
+gradlew assembleDebug
+
+═════════════════════════════════════════════════════════════════
