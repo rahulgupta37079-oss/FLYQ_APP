@@ -9,7 +9,8 @@ import {
   Alert,
 } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
-import droneService from '../utils/DroneConnectionService';
+import realDroneService from '../utils/RealDroneService';
+import wifiScanner from '../utils/WiFiScannerService';
 
 export default function WiFiScreen({ navigation }) {
   const [isScanning, setIsScanning] = useState(false);
@@ -33,49 +34,37 @@ export default function WiFiScreen({ navigation }) {
     setIsConnected(state.isConnected);
   };
 
-  const scanForNetworks = () => {
+  const scanForNetworks = async () => {
     setIsScanning(true);
     
-    // Simulate network scanning (in real app, use native WiFi scanning module)
-    setTimeout(() => {
-      const mockNetworks = [
-        { 
-          id: '1', 
-          ssid: 'FLYQ-Drone-001', 
-          signal: -45, 
-          secured: true,
-          frequency: '2.4 GHz',
-          isDrone: true,
-        },
-        { 
-          id: '2', 
-          ssid: 'FLYQ-Drone-002', 
-          signal: -55, 
-          secured: true,
-          frequency: '5 GHz',
-          isDrone: true,
-        },
-        { 
-          id: '3', 
-          ssid: 'Home-WiFi', 
-          signal: -65, 
-          secured: true,
-          frequency: '2.4 GHz',
-          isDrone: false,
-        },
-        { 
-          id: '4', 
-          ssid: 'Guest-Network', 
-          signal: -75, 
-          secured: false,
-          frequency: '2.4 GHz',
-          isDrone: false,
-        },
-      ];
+    try {
+      // Use real WiFi scanner
+      const result = await wifiScanner.scanNetworks();
       
-      setNetworks(mockNetworks);
+      if (result.success) {
+        setNetworks(result.networks);
+        
+        if (result.networks.length === 0) {
+          Alert.alert(
+            'No Networks Found',
+            'No WiFi networks detected. Make sure your drone is powered on and broadcasting WiFi.',
+            [{ text: 'OK' }]
+          );
+        }
+      } else {
+        Alert.alert(
+          'Scan Failed',
+          result.message || 'Failed to scan for WiFi networks. Make sure Location and WiFi permissions are enabled.',
+          [{ text: 'OK' }]
+        );
+        setNetworks([]);
+      }
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Failed to scan for networks');
+      setNetworks([]);
+    } finally {
       setIsScanning(false);
-    }, 2000);
+    }
   };
 
   const connectToNetwork = (network) => {
@@ -99,39 +88,57 @@ export default function WiFiScreen({ navigation }) {
   const attemptConnection = async (network) => {
     try {
       // Show connecting dialog
-      Alert.alert('Connecting...', `Attempting to connect to ${network.ssid}`);
+      Alert.alert('Connecting...', `Connecting to ${network.ssid}`);
       
-      // Connect to drone
-      const result = await droneService.connect();
+      // For Android: Try to connect programmatically (may not work on all devices)
+      // For iOS: User must connect manually in Settings
+      // const wifiResult = await wifiScanner.connectToNetwork(network.ssid, '', false);
       
-      if (result.success) {
-        Alert.alert(
-          'Success!',
-          `Connected to ${network.ssid}\n\n${result.message}`,
-          [
-            { 
-              text: 'Go to Control', 
-              onPress: () => navigation.navigate('Control')
-            },
-          ]
-        );
-      } else {
-        Alert.alert(
-          'Connection Failed',
-          result.message || 'Could not connect to drone.',
-          [{ text: 'OK' }]
-        );
-      }
+      // Guide user to connect manually (more reliable)
+      Alert.alert(
+        'Connect to Drone WiFi',
+        `Please connect to "${network.ssid}" in your device's WiFi settings, then tap "I'm Connected" to proceed with drone connection.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: "I'm Connected", 
+            onPress: async () => {
+              // Wait a bit for connection to establish
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              
+              // Attempt drone connection
+              const result = await realDroneService.connect();
+              
+              if (result.success) {
+                Alert.alert(
+                  'Success!',
+                  `Connected to drone via ${network.ssid}\n\n${result.message}`,
+                  [
+                    { 
+                      text: 'Go to Control', 
+                      onPress: () => navigation.navigate('Control')
+                    },
+                  ]
+                );
+              } else {
+                Alert.alert(
+                  'Connection Failed',
+                  result.message || 'Could not establish UDP connection to drone. Make sure you are connected to the drone WiFi and the drone is powered on.',
+                  [{ text: 'Retry', onPress: () => attemptConnection(network) }, { text: 'Cancel' }]
+                );
+              }
+            }
+          },
+        ]
+      );
     } catch (error) {
       Alert.alert('Error', error.message || 'Connection error occurred');
     }
   };
 
   const getSignalStrength = (signal) => {
-    if (signal > -50) return { text: 'Excellent', color: '#4CAF50', bars: '▂▄▆█' };
-    if (signal > -60) return { text: 'Good', color: '#8BC34A', bars: '▂▄▆' };
-    if (signal > -70) return { text: 'Fair', color: '#FFC107', bars: '▂▄' };
-    return { text: 'Weak', color: '#F44336', bars: '▂' };
+    const signalInfo = wifiScanner.getSignalInfo(signal);
+    return signalInfo;
   };
 
   const renderNetwork = ({ item }) => {

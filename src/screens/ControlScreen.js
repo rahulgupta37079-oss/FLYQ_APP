@@ -14,7 +14,7 @@ import Animated, {
   withSpring,
   runOnJS,
 } from 'react-native-reanimated';
-import droneService from '../utils/DroneConnectionService';
+import realDroneService from '../utils/RealDroneService';
 import VideoBackground from '../components/VideoBackground';
 import { useOrientation } from '../hooks/useOrientation';
 
@@ -91,16 +91,16 @@ export default function ControlScreen() {
   useEffect(() => {
     try {
       // Check connection status
-      const status = droneService.getStatus();
+      const status = realDroneService.getStatus();
       setIsConnected(status.isConnected);
 
       // Set up connection callback
-      droneService.onConnectionChange((status) => {
+      realDroneService.onConnectionChange((status) => {
         setIsConnected(status.connected);
       });
 
       // Set up telemetry callback
-      droneService.onTelemetry((data) => {
+      realDroneService.onTelemetry((data) => {
         if (data) {
           setBattery(data.battery || 87);
           setSignal(data.signal || 4);
@@ -110,8 +110,8 @@ export default function ControlScreen() {
       // Start polling telemetry if connected
       const telemetryInterval = setInterval(async () => {
         try {
-          if (droneService.getStatus().isConnected) {
-            await droneService.getTelemetry();
+          if (realDroneService.getStatus().isConnected) {
+            await realDroneService.getTelemetry();
           }
         } catch (error) {
           console.log('Telemetry poll error:', error);
@@ -137,7 +137,7 @@ export default function ControlScreen() {
       
       // Update drone command
       if (isConnected && isArmed) {
-        droneService.updateCommand({
+        realDroneService.updateCommand({
           roll,
           pitch,
           yaw: yawValue,
@@ -159,7 +159,7 @@ export default function ControlScreen() {
       
       // Update drone command
       if (isConnected && isArmed) {
-        droneService.updateCommand({
+        realDroneService.updateCommand({
           roll: rollValue,
           pitch: pitchValue,
           yaw,
@@ -188,7 +188,7 @@ export default function ControlScreen() {
           text: isArmed ? 'Disarm' : 'Arm',
           style: isArmed ? 'default' : 'destructive',
           onPress: async () => {
-            const result = await droneService.setArmed(!isArmed);
+            const result = await realDroneService.setArmed(!isArmed);
             if (result.success) {
               setIsArmed(!isArmed);
             } else {
@@ -241,7 +241,7 @@ export default function ControlScreen() {
           text: 'STOP NOW',
           style: 'destructive',
           onPress: async () => {
-            await droneService.sendStopCommand();
+            await realDroneService.sendStopCommand();
             setIsArmed(false);
             setThrottle(0);
             setYaw(0);

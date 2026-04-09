@@ -32,7 +32,10 @@
         "CHANGE_WIFI_STATE",
         "ACCESS_NETWORK_STATE",
         "INTERNET",
-        "VIBRATE"
+        "VIBRATE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CHANGE_NETWORK_STATE"
       ],
       "screenOrientation": "fullSensor",
       "playStoreUrl": "https://play.google.com/store/apps/details?id=com.flyq.dronecontroller"
