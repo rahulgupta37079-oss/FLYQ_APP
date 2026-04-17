@@ -19,17 +19,32 @@ class WiFiScannerService {
     }
 
     try {
+      // Check if permissions are already granted
+      const fineLocationGranted = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+      );
+
+      if (fineLocationGranted) {
+        return true; // Already have permissions
+      }
+
+      // Request permissions
       const granted = await PermissionsAndroid.requestMultiple([
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         PermissionsAndroid.PERMISSIONS.ACCESS_WIFI_STATE,
         PermissionsAndroid.PERMISSIONS.CHANGE_WIFI_STATE,
       ]);
 
-      return (
+      const hasAllPermissions = 
         granted['android.permission.ACCESS_FINE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED &&
         granted['android.permission.ACCESS_WIFI_STATE'] === PermissionsAndroid.RESULTS.GRANTED &&
-        granted['android.permission.CHANGE_WIFI_STATE'] === PermissionsAndroid.RESULTS.GRANTED
-      );
+        granted['android.permission.CHANGE_WIFI_STATE'] === PermissionsAndroid.RESULTS.GRANTED;
+
+      if (!hasAllPermissions) {
+        console.warn('Not all WiFi permissions granted:', granted);
+      }
+
+      return hasAllPermissions;
     } catch (err) {
       console.error('Permission request error:', err);
       return false;
@@ -47,34 +62,76 @@ class WiFiScannerService {
       // Request permissions first
       const hasPermission = await this.requestPermissions();
       if (!hasPermission) {
-        throw new Error('WiFi scanning permissions not granted. Please enable Location and WiFi permissions in Settings.');
+        this.isScanning = false;
+        return {
+          success: false,
+          message: 'Location permission is required for WiFi scanning.\n\nPlease go to Settings → Apps → FLYQ → Permissions → Location → Allow',
+          networks: [],
+        };
       }
 
       // Check if WiFi is enabled
-      const isEnabled = await WifiManager.isEnabled();
-      if (!isEnabled) {
-        throw new Error('WiFi is disabled. Please enable WiFi to scan for networks.');
+      let isEnabled = false;
+      try {
+        isEnabled = await WifiManager.isEnabled();
+      } catch (err) {
+        console.warn('Could not check WiFi status:', err);
+        // Continue anyway - might still work
       }
 
-      // Scan for networks
-      const networkList = await WifiManager.reScanAndLoadWifiList();
+      if (!isEnabled) {
+        this.isScanning = false;
+        return {
+          success: false,
+          message: 'WiFi is disabled. Please enable WiFi in device settings to scan for networks.',
+          networks: [],
+        };
+      }
+
+      // Scan for networks with timeout protection
+      let networkList = [];
+      try {
+        const scanPromise = WifiManager.reScanAndLoadWifiList();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('WiFi scan timeout after 15 seconds')), 15000)
+        );
+        
+        networkList = await Promise.race([scanPromise, timeoutPromise]);
+      } catch (scanError) {
+        console.error('WiFi scan failed:', scanError);
+        this.isScanning = false;
+        return {
+          success: false,
+          message: `WiFi scan failed: ${scanError.message}\n\nMake sure:\n✓ WiFi is ON\n✓ Location is ON\n✓ Location permission granted`,
+          networks: [],
+        };
+      }
+
+      // Validate scan results
+      if (!Array.isArray(networkList)) {
+        console.warn('Invalid network list:', networkList);
+        networkList = [];
+      }
 
       // Process and format networks
-      this.networks = networkList.map((network, index) => ({
-        id: `${network.BSSID || index}`,
-        ssid: network.SSID,
-        bssid: network.BSSID,
-        signal: network.level, // Signal strength in dBm (-100 to 0)
-        frequency: network.frequency ? `${(network.frequency / 1000).toFixed(1)} GHz` : '2.4 GHz',
-        secured: network.capabilities.includes('WPA') || network.capabilities.includes('WEP'),
-        capabilities: network.capabilities,
-        isDrone: this.isDroneNetwork(network.SSID),
-      })).sort((a, b) => {
-        // Sort: Drone networks first, then by signal strength
-        if (a.isDrone && !b.isDrone) return -1;
-        if (!a.isDrone && b.isDrone) return 1;
-        return b.signal - a.signal;
-      });
+      this.networks = networkList
+        .filter(network => network && network.SSID) // Filter out invalid entries
+        .map((network, index) => ({
+          id: `${network.BSSID || `network-${index}`}`,
+          ssid: network.SSID || 'Unknown',
+          bssid: network.BSSID || '',
+          signal: network.level || -100, // Signal strength in dBm (-100 to 0)
+          frequency: network.frequency ? `${(network.frequency / 1000).toFixed(1)} GHz` : '2.4 GHz',
+          secured: (network.capabilities || '').includes('WPA') || (network.capabilities || '').includes('WEP'),
+          capabilities: network.capabilities || '',
+          isDrone: this.isDroneNetwork(network.SSID),
+        }))
+        .sort((a, b) => {
+          // Sort: Drone networks first, then by signal strength
+          if (a.isDrone && !b.isDrone) return -1;
+          if (!a.isDrone && b.isDrone) return 1;
+          return b.signal - a.signal;
+        });
 
       this.isScanning = false;
       return {
@@ -88,7 +145,7 @@ class WiFiScannerService {
       
       return {
         success: false,
-        message: error.message,
+        message: `Unexpected error: ${error.message}\n\nPlease try again or restart the app.`,
         networks: [],
       };
     }
