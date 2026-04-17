@@ -7,6 +7,9 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
+  Platform,
+  PermissionsAndroid,
+  Linking,
 } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import realDroneService from '../utils/RealDroneService';
@@ -17,9 +20,12 @@ export default function WiFiScreen({ navigation }) {
   const [networks, setNetworks] = useState([]);
   const [connectionInfo, setConnectionInfo] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [hasPermission, setHasPermission] = useState(false);
 
   useEffect(() => {
     checkConnection();
+    requestPermissionsOnLoad();
+    
     const unsubscribe = NetInfo.addEventListener(state => {
       setConnectionInfo(state);
       setIsConnected(state.isConnected);
@@ -27,6 +33,56 @@ export default function WiFiScreen({ navigation }) {
 
     return () => unsubscribe();
   }, []);
+
+  const requestPermissionsOnLoad = async () => {
+    if (Platform.OS !== 'android') {
+      setHasPermission(true);
+      return;
+    }
+
+    try {
+      // Check if already granted
+      const granted = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+      );
+
+      if (granted) {
+        setHasPermission(true);
+        return;
+      }
+
+      // Request permissions
+      const result = await PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        PermissionsAndroid.PERMISSIONS.ACCESS_WIFI_STATE,
+        PermissionsAndroid.PERMISSIONS.CHANGE_WIFI_STATE,
+      ]);
+
+      const allGranted = 
+        result['android.permission.ACCESS_FINE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED &&
+        result['android.permission.ACCESS_WIFI_STATE'] === PermissionsAndroid.RESULTS.GRANTED &&
+        result['android.permission.CHANGE_WIFI_STATE'] === PermissionsAndroid.RESULTS.GRANTED;
+
+      setHasPermission(allGranted);
+
+      if (!allGranted) {
+        Alert.alert(
+          'Permissions Required',
+          'WiFi scanning requires Location permission. Please grant permissions in Settings.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { 
+              text: 'Open Settings', 
+              onPress: () => Linking.openSettings()
+            },
+          ]
+        );
+      }
+    } catch (err) {
+      console.error('Permission request error:', err);
+      setHasPermission(false);
+    }
+  };
 
   const checkConnection = async () => {
     const state = await NetInfo.fetch();
@@ -177,6 +233,25 @@ export default function WiFiScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      {/* Permission Status */}
+      {!hasPermission && (
+        <View style={styles.permissionBanner}>
+          <Text style={styles.permissionIcon}>⚠️</Text>
+          <View style={styles.permissionTextContainer}>
+            <Text style={styles.permissionTitle}>Location Permission Required</Text>
+            <Text style={styles.permissionText}>
+              WiFi scanning needs Location permission to work
+            </Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.permissionButton}
+            onPress={() => Linking.openSettings()}
+          >
+            <Text style={styles.permissionButtonText}>Enable</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Connection Status */}
       <View style={styles.statusCard}>
         <Text style={styles.statusTitle}>Current Connection</Text>
@@ -210,16 +285,17 @@ export default function WiFiScreen({ navigation }) {
 
       {/* Scan Button */}
       <TouchableOpacity
-        style={styles.scanButton}
+        style={[styles.scanButton, !hasPermission && styles.scanButtonDisabled]}
         onPress={scanForNetworks}
-        disabled={isScanning}
+        disabled={isScanning || !hasPermission}
         activeOpacity={0.7}
       >
         {isScanning ? (
           <ActivityIndicator color="#fff" size="small" />
         ) : (
           <Text style={styles.scanButtonText}>
-            📡 {networks.length > 0 ? 'Refresh Networks' : 'Scan for Networks'}
+            {!hasPermission ? '⚠️ Grant Permission First' : 
+             networks.length > 0 ? '📡 Refresh Networks' : '📡 Scan for Networks'}
           </Text>
         )}
       </TouchableOpacity>
@@ -261,6 +337,43 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
     padding: 20,
+  },
+  permissionBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ff9800',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+  },
+  permissionIcon: {
+    fontSize: 32,
+    marginRight: 12,
+  },
+  permissionTextContainer: {
+    flex: 1,
+  },
+  permissionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 4,
+  },
+  permissionText: {
+    fontSize: 13,
+    color: '#333',
+  },
+  permissionButton: {
+    backgroundColor: '#000',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginLeft: 12,
+  },
+  permissionButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   statusCard: {
     backgroundColor: '#1a1a1a',
@@ -309,6 +422,10 @@ const styles = StyleSheet.create({
     padding: 18,
     alignItems: 'center',
     marginBottom: 20,
+  },
+  scanButtonDisabled: {
+    backgroundColor: '#666',
+    opacity: 0.6,
   },
   scanButtonText: {
     color: '#fff',
