@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLYQ Drone Controller - Web Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            margin: 20px auto;
+            background: #000;
+            border-radius: 40px;
+            border: 12px solid #1a1a1a;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .notch {
+            width: 200px;
+            height: 30px;
+            background: #000;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 0 0 20px 20px;
+            z-index: 1000;
+        }
+        
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            overflow-y: auto;
+            padding-top: 40px;
+        }
+        
+        .header {
+            background: #1a1a1a;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+        
+        .hero-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+        
+        .hero-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .hero-version {
+            font-size: 16px;
+            color: #4CAF50;
+            font-weight: 600;
+        }
+        
+        .hero-subtitle {
+            font-size: 14px;
+            color: #888;
+            font-style: italic;
+        }
+        
+        .status-card {
+            background: #1a1a1a;
+            margin: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+        
+        .status-row {
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .status-item {
+            text-align: center;
+        }
+        
+        .status-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .status-value {
+            font-size: 14px;
+            color: #4CAF50;
+            font-weight: 600;
+        }
+        
+        .status-value-inactive {
+            font-size: 14px;
+            color: #666;
+            font-weight: 600;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0 20px 16px 20px;
+            color: #fff;
+        }
+        
+        .menu-item {
+            background: #1a1a1a;
+            margin: 0 20px 12px 20px;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            border-left: 4px solid;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .menu-item:hover {
+            background: #2a2a2a;
+            transform: translateX(5px);
+        }
+        
+        .menu-item.wifi { border-left-color: #4CAF50; }
+        .menu-item.control { border-left-color: #2196F3; }
+        .menu-item.camera { border-left-color: #FF9800; }
+        .menu-item.settings { border-left-color: #9C27B0; }
+        
+        .menu-icon-container {
+            width: 50px;
+            height: 50px;
+            border-radius: 25px;
+            background: #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            font-size: 24px;
+        }
+        
+        .menu-text-container {
+            flex: 1;
+        }
+        
+        .menu-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .menu-description {
+            font-size: 13px;
+            color: #888;
+        }
+        
+        .menu-arrow {
+            font-size: 28px;
+            color: #666;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .footer-text {
+            font-size: 11px;
+            color: #666;
+            font-style: italic;
+            line-height: 1.6;
+        }
+        
+        .demo-notice {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .info-box {
+            background: #1a1a1a;
+            padding: 30px;
+            margin: 20px;
+            border-radius: 12px;
+            border: 2px solid #4CAF50;
+            text-align: center;
+        }
+        
+        .info-box h2 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+        
+        .info-box p {
+            color: #ccc;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+        
+        .download-btn {
+            display: inline-block;
+            background: #4CAF50;
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        .download-btn:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-notice">
+        📱 FLYQ Drone Controller - Interactive Web Demo
+    </div>
+    
+    <div class="phone-frame">
+        <div class="notch"></div>
+        <div class="screen">
+            <div class="header">
+                <div class="hero-icon">🚁</div>
+                <div class="hero-title">FLYQ Drone Controller</div>
+                <div class="hero-version">v2.1.0</div>
+                <div class="hero-subtitle">Professional Edition</div>
+            </div>
+            
+            <div class="status-card">
+                <div class="status-row">
+                    <div class="status-item">
+                        <div class="status-label">Status</div>
+                        <div class="status-value">● Ready</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Connection</div>
+                        <div class="status-value-inactive">● Not Connected</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section-title">Quick Access</div>
+            
+            <div class="menu-item wifi" onclick="showScreen('wifi')">
+                <div class="menu-icon-container">📡</div>
+                <div class="menu-text-container">
+                    <div class="menu-title">WiFi Connection</div>
+                    <div class="menu-description">Connect to drone network</div>
+                </div>
+                <div class="menu-arrow">›</div>
+            </div>
+            
+            <div class="menu-item control" onclick="showScreen('control')">
+                <div class="menu-icon-container">🎮</div>
+                <div class="menu-text-container">
+                    <div class="menu-title">Drone Control</div>
+                    <div class="menu-description">Control flight operations</div>
+                </div>
+                <div class="menu-arrow">›</div>
+            </div>
+            
+            <div class="menu-item camera" onclick="showScreen('camera')">
+                <div class="menu-icon-container">📷</div>
+                <div class="menu-text-container">
+                    <div class="menu-title">Camera Stream</div>
+                    <div class="menu-description">View live video feed</div>
+                </div>
+                <div class="menu-arrow">›</div>
+            </div>
+            
+            <div class="menu-item settings" onclick="showScreen('settings')">
+                <div class="menu-icon-container">⚙️</div>
+                <div class="menu-text-container">
+                    <div class="menu-title">Settings</div>
+                    <div class="menu-description">App configuration</div>
+                </div>
+                <div class="menu-arrow">›</div>
+            </div>
+            
+            <div class="footer">
+                <div class="footer-text">
+                    FLYQ Drone Controller<br>
+                    by Passion 3D World<br>
+                    © 2026 All Rights Reserved
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="info-box">
+        <h2>🎉 Your App is Ready!</h2>
+        <p><strong>✅ All screenshots processed and ready for Play Store</strong></p>
+        <p><strong>✅ AAB file signed and ready for upload</strong></p>
+        <p><strong>✅ Feature graphic and all assets generated</strong></p>
+        <p style="margin-top: 20px;">This is a web demo showing your app's home screen.</p>
+        <p>The actual Android app includes full drone control, WiFi scanning,<br>camera streaming, and all interactive features!</p>
+        
+        <a href="https://expo.dev/artifacts/eas/59NL6f1eCjszVWKW4pbS6P.aab" class="download-btn">
+            📦 Download AAB for Play Store
+        </a>
+    </div>
+    
+    <script>
+        function showScreen(screen) {
+            alert(`In the real Android app, this would open the ${screen.toUpperCase()} screen with full functionality!`);
+        }
+    </script>
+</body>
+</html>

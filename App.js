@@ -1,4 +1,5 @@
 import 'react-native-gesture-handler';
+import './global-polyfills'; // Import Buffer polyfill FIRST
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

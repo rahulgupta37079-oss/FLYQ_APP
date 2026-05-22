@@ -3,6 +3,7 @@
 
 import dgram from 'react-native-udp';
 import NetInfo from '@react-native-community/netinfo';
+import { Buffer } from 'buffer';
 
 class RealDroneService {
   constructor() {
