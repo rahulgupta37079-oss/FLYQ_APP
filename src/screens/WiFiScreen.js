@@ -4,330 +4,251 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  FlatList,
   ActivityIndicator,
   Alert,
   Platform,
-  PermissionsAndroid,
   Linking,
 } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
-import realDroneService from '../utils/RealDroneService';
-import wifiScanner from '../utils/WiFiScannerService';
+import espDroneService from '../utils/EspDroneService';
 
 export default function WiFiScreen({ navigation }) {
-  const [isScanning, setIsScanning] = useState(false);
-  const [networks, setNetworks] = useState([]);
   const [connectionInfo, setConnectionInfo] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [hasPermission, setHasPermission] = useState(false);
+  const [isDroneConnected, setIsDroneConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
 
   useEffect(() => {
-    checkConnection();
-    requestPermissionsOnLoad();
-    
+    // Monitor WiFi connection state
     const unsubscribe = NetInfo.addEventListener(state => {
+      console.log('[WiFi] Network state changed:', state);
       setConnectionInfo(state);
-      setIsConnected(state.isConnected);
+      setIsConnected(state.isConnected && state.type === 'wifi');
+      
+      // Auto-connect to drone when WiFi connected
+      if (state.isConnected && state.type === 'wifi' && !isDroneConnected) {
+        autoConnectToDrone(state);
+      }
     });
 
+    // Check initial connection
+    checkConnection();
+
     return () => unsubscribe();
-  }, []);
-
-  const requestPermissionsOnLoad = async () => {
-    if (Platform.OS !== 'android') {
-      setHasPermission(true);
-      return;
-    }
-
-    try {
-      // Check if already granted
-      const granted = await PermissionsAndroid.check(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-      );
-
-      if (granted) {
-        setHasPermission(true);
-        return;
-      }
-
-      // Request permissions
-      const result = await PermissionsAndroid.requestMultiple([
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        PermissionsAndroid.PERMISSIONS.ACCESS_WIFI_STATE,
-        PermissionsAndroid.PERMISSIONS.CHANGE_WIFI_STATE,
-      ]);
-
-      const allGranted = 
-        result['android.permission.ACCESS_FINE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED &&
-        result['android.permission.ACCESS_WIFI_STATE'] === PermissionsAndroid.RESULTS.GRANTED &&
-        result['android.permission.CHANGE_WIFI_STATE'] === PermissionsAndroid.RESULTS.GRANTED;
-
-      setHasPermission(allGranted);
-
-      if (!allGranted) {
-        Alert.alert(
-          'Permissions Required',
-          'WiFi scanning requires Location permission. Please grant permissions in Settings.',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { 
-              text: 'Open Settings', 
-              onPress: () => Linking.openSettings()
-            },
-          ]
-        );
-      }
-    } catch (err) {
-      console.error('Permission request error:', err);
-      setHasPermission(false);
-    }
-  };
+  }, [isDroneConnected]);
 
   const checkConnection = async () => {
     const state = await NetInfo.fetch();
     setConnectionInfo(state);
-    setIsConnected(state.isConnected);
+    setIsConnected(state.isConnected && state.type === 'wifi');
   };
 
-  const scanForNetworks = async () => {
-    setIsScanning(true);
-    
+  const autoConnectToDrone = async (networkState) => {
+    // Only auto-connect if connected to WiFi
+    if (!networkState.isConnected || networkState.type !== 'wifi') {
+      return;
+    }
+
+    // Check if already connecting or connected
+    if (isConnecting || isDroneConnected) {
+      return;
+    }
+
+    console.log('[WiFi] Auto-connecting to drone...');
+    setIsConnecting(true);
+
     try {
-      // Use real WiFi scanner
-      const result = await wifiScanner.scanNetworks();
+      // Try to connect to drone UDP service
+      // ESP-Drone default IP: 192.168.43.42
+      const result = await espDroneService.connect('192.168.43.42');
       
       if (result.success) {
-        setNetworks(result.networks);
-        
-        if (result.networks.length === 0) {
-          Alert.alert(
-            'No Networks Found',
-            'No WiFi networks detected. Make sure your drone is powered on and broadcasting WiFi.',
-            [{ text: 'OK' }]
-          );
-        }
-      } else {
+        setIsDroneConnected(true);
         Alert.alert(
-          'Scan Failed',
-          result.message || 'Failed to scan for WiFi networks. Make sure Location and WiFi permissions are enabled.',
+          'Connected!',
+          'Successfully connected to ESP Drone',
           [{ text: 'OK' }]
         );
-        setNetworks([]);
       }
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to scan for networks');
-      setNetworks([]);
+      console.error('[WiFi] Auto-connect failed:', error);
     } finally {
-      setIsScanning(false);
+      setIsConnecting(false);
     }
   };
 
-  const connectToNetwork = (network) => {
-    if (!network.isDrone) {
+  const manualConnectToDrone = async () => {
+    if (!isConnected) {
       Alert.alert(
-        'Not a Drone Network',
-        'This network is not a FLYQ drone. Connect anyway?',
+        'No WiFi Connection',
+        'Please connect to your drone\'s WiFi network first.\n\nLook for WiFi network named:\n- ESP_DRONE_xxx\n- TELLO-xxx\n- Or your drone\'s WiFi name',
         [
           { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Connect', 
-            onPress: () => attemptConnection(network)
-          },
-        ]
-      );
-    } else {
-      attemptConnection(network);
-    }
-  };
-
-  const attemptConnection = async (network) => {
-    try {
-      // Show connecting dialog
-      Alert.alert('Connecting...', `Connecting to ${network.ssid}`);
-      
-      // For Android: Try to connect programmatically (may not work on all devices)
-      // For iOS: User must connect manually in Settings
-      // const wifiResult = await wifiScanner.connectToNetwork(network.ssid, '', false);
-      
-      // Guide user to connect manually (more reliable)
-      Alert.alert(
-        'Connect to Drone WiFi',
-        `Please connect to "${network.ssid}" in your device's WiFi settings, then tap "I'm Connected" to proceed with drone connection.`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: "I'm Connected", 
-            onPress: async () => {
-              // Wait a bit for connection to establish
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              
-              // Attempt drone connection
-              const result = await realDroneService.connect();
-              
-              if (result.success) {
-                Alert.alert(
-                  'Success!',
-                  `Connected to drone via ${network.ssid}\n\n${result.message}`,
-                  [
-                    { 
-                      text: 'Go to Control', 
-                      onPress: () => navigation.navigate('Control')
-                    },
-                  ]
-                );
+          {
+            text: 'Open WiFi Settings',
+            onPress: () => {
+              if (Platform.OS === 'android') {
+                Linking.sendIntent('android.settings.WIFI_SETTINGS');
               } else {
-                Alert.alert(
-                  'Connection Failed',
-                  result.message || 'Could not establish UDP connection to drone. Make sure you are connected to the drone WiFi and the drone is powered on.',
-                  [{ text: 'Retry', onPress: () => attemptConnection(network) }, { text: 'Cancel' }]
-                );
+                Linking.openURL('App-Prefs:root=WIFI');
               }
             }
-          },
+          }
         ]
       );
+      return;
+    }
+
+    setIsConnecting(true);
+
+    try {
+      // Get current network details
+      const droneIP = '192.168.43.42'; // ESP-Drone default
+      
+      console.log('[WiFi] Connecting to drone at', droneIP);
+      const result = await espDroneService.connect(droneIP);
+
+      if (result.success) {
+        setIsDroneConnected(true);
+        Alert.alert(
+          'Success!',
+          `Connected to ESP Drone\nIP: ${droneIP}`,
+          [
+            {
+              text: 'Go to Control',
+              onPress: () => navigation.navigate('Control')
+            }
+          ]
+        );
+      } else {
+        Alert.alert(
+          'Connection Failed',
+          result.error || 'Could not connect to drone. Make sure you are connected to the drone\'s WiFi network.',
+          [{ text: 'OK' }]
+        );
+      }
     } catch (error) {
-      Alert.alert('Error', error.message || 'Connection error occurred');
+      Alert.alert(
+        'Connection Error',
+        error.message || 'Failed to connect to drone',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsConnecting(false);
     }
   };
 
-  const getSignalStrength = (signal) => {
-    const signalInfo = wifiScanner.getSignalInfo(signal);
-    return signalInfo;
+  const disconnectFromDrone = () => {
+    espDroneService.disconnect();
+    setIsDroneConnected(false);
+    Alert.alert('Disconnected', 'Disconnected from drone');
   };
 
-  const renderNetwork = ({ item }) => {
-    const signal = getSignalStrength(item.signal);
-    
-    return (
-      <TouchableOpacity
-        style={[
-          styles.networkItem,
-          item.isDrone && styles.droneNetwork,
-        ]}
-        onPress={() => connectToNetwork(item)}
-        activeOpacity={0.7}
-      >
-        <View style={styles.networkInfo}>
-          <View style={styles.networkHeader}>
-            <Text style={styles.networkName}>
-              {item.isDrone && '🚁 '}
-              {item.ssid}
-            </Text>
-            {item.secured && <Text style={styles.lockIcon}>🔒</Text>}
-          </View>
-          <View style={styles.networkDetails}>
-            <Text style={styles.networkDetailText}>
-              {item.frequency} • {signal.text}
-            </Text>
-            <Text style={[styles.signalBars, { color: signal.color }]}>
-              {signal.bars}
-            </Text>
-          </View>
-        </View>
-        <Text style={styles.connectArrow}>›</Text>
-      </TouchableOpacity>
-    );
+  const openWiFiSettings = () => {
+    if (Platform.OS === 'android') {
+      Linking.sendIntent('android.settings.WIFI_SETTINGS');
+    } else {
+      Linking.openURL('App-Prefs:root=WIFI');
+    }
   };
 
   return (
     <View style={styles.container}>
-      {/* Permission Status */}
-      {!hasPermission && (
-        <View style={styles.permissionBanner}>
-          <Text style={styles.permissionIcon}>⚠️</Text>
-          <View style={styles.permissionTextContainer}>
-            <Text style={styles.permissionTitle}>Location Permission Required</Text>
-            <Text style={styles.permissionText}>
-              WiFi scanning needs Location permission to work
-            </Text>
-          </View>
-          <TouchableOpacity 
-            style={styles.permissionButton}
-            onPress={() => Linking.openSettings()}
-          >
-            <Text style={styles.permissionButtonText}>Enable</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Connection Status */}
+      {/* Connection Status Card */}
       <View style={styles.statusCard}>
-        <Text style={styles.statusTitle}>Current Connection</Text>
-        {isConnected ? (
-          <View style={styles.statusContent}>
-            <Text style={styles.statusConnected}>
-              <Text style={styles.statusDot}>●</Text> Connected
+        <Text style={styles.statusTitle}>CONNECTION STATUS</Text>
+        
+        <View style={styles.statusRow}>
+          <View style={styles.statusItem}>
+            <Text style={styles.statusLabel}>WiFi</Text>
+            <Text style={isConnected ? styles.statusValueActive : styles.statusValueInactive}>
+              {isConnected ? '● Connected' : '● Disconnected'}
             </Text>
-            {connectionInfo?.details && (
-              <>
-                <Text style={styles.statusDetail}>
-                  Network: {connectionInfo.details.ssid || 'Unknown'}
-                </Text>
-                <Text style={styles.statusDetail}>
-                  IP: {connectionInfo.details.ipAddress || 'N/A'}
-                </Text>
-              </>
+            {isConnected && connectionInfo?.details?.ssid && (
+              <Text style={styles.networkName}>
+                Network: {connectionInfo.details.ssid}
+              </Text>
             )}
           </View>
-        ) : (
-          <View style={styles.statusContent}>
-            <Text style={styles.statusDisconnected}>
-              <Text style={styles.statusDotInactive}>●</Text> Not Connected
+
+          <View style={styles.statusItem}>
+            <Text style={styles.statusLabel}>Drone</Text>
+            <Text style={isDroneConnected ? styles.statusValueActive : styles.statusValueInactive}>
+              {isDroneConnected ? '● Connected' : '● Not Connected'}
             </Text>
-            <Text style={styles.statusDetail}>
-              Enable WiFi and scan for networks
-            </Text>
+            {isDroneConnected && (
+              <Text style={styles.droneIP}>IP: 192.168.43.42</Text>
+            )}
           </View>
+        </View>
+      </View>
+
+      {/* Instructions */}
+      <View style={styles.instructionsCard}>
+        <Text style={styles.instructionsTitle}>📡 How to Connect:</Text>
+        <Text style={styles.instructionStep}>1. Connect to drone WiFi (ESP_DRONE_xxx)</Text>
+        <Text style={styles.instructionStep}>2. Tap "Connect to Drone" button below</Text>
+        <Text style={styles.instructionStep}>3. Wait for connection confirmation</Text>
+        <Text style={styles.instructionStep}>4. Go to Control screen to fly!</Text>
+      </View>
+
+      {/* Action Buttons */}
+      <View style={styles.buttonsContainer}>
+        {!isDroneConnected ? (
+          <>
+            <TouchableOpacity
+              style={[styles.button, styles.primaryButton]}
+              onPress={openWiFiSettings}
+            >
+              <Text style={styles.buttonText}>📶 Open WiFi Settings</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.button,
+                styles.connectButton,
+                (!isConnected || isConnecting) && styles.buttonDisabled
+              ]}
+              onPress={manualConnectToDrone}
+              disabled={!isConnected || isConnecting}
+            >
+              {isConnecting ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>
+                  {isConnected ? '🚁 Connect to Drone' : '⚠️ Connect WiFi First'}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <TouchableOpacity
+              style={[styles.button, styles.successButton]}
+              onPress={() => navigation.navigate('Control')}
+            >
+              <Text style={styles.buttonText}>🎮 Go to Control Screen</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, styles.disconnectButton]}
+              onPress={disconnectFromDrone}
+            >
+              <Text style={styles.buttonText}>🔌 Disconnect</Text>
+            </TouchableOpacity>
+          </>
         )}
       </View>
 
-      {/* Scan Button */}
-      <TouchableOpacity
-        style={[styles.scanButton, !hasPermission && styles.scanButtonDisabled]}
-        onPress={scanForNetworks}
-        disabled={isScanning || !hasPermission}
-        activeOpacity={0.7}
-      >
-        {isScanning ? (
-          <ActivityIndicator color="#fff" size="small" />
-        ) : (
-          <Text style={styles.scanButtonText}>
-            {!hasPermission ? '⚠️ Grant Permission First' : 
-             networks.length > 0 ? '📡 Refresh Networks' : '📡 Scan for Networks'}
-          </Text>
-        )}
-      </TouchableOpacity>
-
-      {/* Networks List */}
-      {isScanning && networks.length === 0 ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4CAF50" />
-          <Text style={styles.loadingText}>Scanning for networks...</Text>
-        </View>
-      ) : networks.length > 0 ? (
-        <>
-          <Text style={styles.sectionTitle}>
-            Available Networks ({networks.length})
-          </Text>
-          <FlatList
-            data={networks}
-            renderItem={renderNetwork}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContainer}
-            showsVerticalScrollIndicator={false}
-          />
-        </>
-      ) : (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>📡</Text>
-          <Text style={styles.emptyText}>No Networks Found</Text>
-          <Text style={styles.emptySubtext}>
-            Tap the scan button to search for WiFi networks
-          </Text>
-        </View>
-      )}
+      {/* Technical Info */}
+      <View style={styles.techInfoCard}>
+        <Text style={styles.techInfoTitle}>🔧 Technical Info</Text>
+        <Text style={styles.techInfoText}>Protocol: ESP-Drone CRTP/UDP</Text>
+        <Text style={styles.techInfoText}>App Port: 2399</Text>
+        <Text style={styles.techInfoText}>Drone Port: 2390</Text>
+        <Text style={styles.techInfoText}>Default IP: 192.168.43.42</Text>
+        <Text style={styles.techInfoText}>Version: 2.1.2</Text>
+      </View>
     </View>
   );
 }
@@ -337,43 +258,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
     padding: 20,
-  },
-  permissionBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ff9800',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-  },
-  permissionIcon: {
-    fontSize: 32,
-    marginRight: 12,
-  },
-  permissionTextContainer: {
-    flex: 1,
-  },
-  permissionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-    marginBottom: 4,
-  },
-  permissionText: {
-    fontSize: 13,
-    color: '#333',
-  },
-  permissionButton: {
-    backgroundColor: '#000',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginLeft: 12,
-  },
-  permissionButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
   },
   statusCard: {
     backgroundColor: '#1a1a1a',
@@ -385,144 +269,113 @@ const styles = StyleSheet.create({
   },
   statusTitle: {
     fontSize: 14,
+    fontWeight: 'bold',
     color: '#888',
-    textTransform: 'uppercase',
+    marginBottom: 15,
     letterSpacing: 1,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  statusItem: {
+    alignItems: 'center',
+  },
+  statusLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  statusValueActive: {
+    fontSize: 16,
+    color: '#4CAF50',
+    fontWeight: '600',
+  },
+  statusValueInactive: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '600',
+  },
+  networkName: {
+    fontSize: 11,
+    color: '#888',
+    marginTop: 4,
+  },
+  droneIP: {
+    fontSize: 11,
+    color: '#888',
+    marginTop: 4,
+  },
+  instructionsCard: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#333',
+    borderLeftWidth: 4,
+    borderLeftColor: '#2196F3',
+  },
+  instructionsTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
     marginBottom: 12,
   },
-  statusContent: {
-    gap: 8,
-  },
-  statusConnected: {
-    fontSize: 18,
-    color: '#4CAF50',
-    fontWeight: '600',
-  },
-  statusDisconnected: {
-    fontSize: 18,
-    color: '#666',
-    fontWeight: '600',
-  },
-  statusDot: {
-    color: '#4CAF50',
-    fontSize: 24,
-  },
-  statusDotInactive: {
-    color: '#666',
-    fontSize: 24,
-  },
-  statusDetail: {
+  instructionStep: {
     fontSize: 14,
-    color: '#aaa',
-    marginLeft: 24,
+    color: '#ccc',
+    marginBottom: 8,
+    lineHeight: 20,
   },
-  scanButton: {
-    backgroundColor: '#2196F3',
+  buttonsContainer: {
+    marginBottom: 20,
+  },
+  button: {
     borderRadius: 12,
     padding: 18,
     alignItems: 'center',
-    marginBottom: 20,
-  },
-  scanButtonDisabled: {
-    backgroundColor: '#666',
-    opacity: 0.6,
-  },
-  scanButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  sectionTitle: {
-    fontSize: 16,
-    color: '#fff',
-    fontWeight: '600',
     marginBottom: 12,
-    marginLeft: 4,
   },
-  listContainer: {
-    paddingBottom: 20,
+  primaryButton: {
+    backgroundColor: '#2196F3',
   },
-  networkItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  connectButton: {
+    backgroundColor: '#4CAF50',
+  },
+  successButton: {
+    backgroundColor: '#4CAF50',
+  },
+  disconnectButton: {
+    backgroundColor: '#f44336',
+  },
+  buttonDisabled: {
+    backgroundColor: '#333',
+    opacity: 0.5,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  techInfoCard: {
     backgroundColor: '#1a1a1a',
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    padding: 15,
     borderWidth: 1,
     borderColor: '#333',
   },
-  droneNetwork: {
-    borderLeftWidth: 4,
-    borderLeftColor: '#4CAF50',
-    backgroundColor: '#1a2a1a',
-  },
-  networkInfo: {
-    flex: 1,
-  },
-  networkHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  networkName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#fff',
-    flex: 1,
-  },
-  lockIcon: {
-    fontSize: 16,
-    marginLeft: 8,
-  },
-  networkDetails: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  networkDetailText: {
+  techInfoTitle: {
     fontSize: 14,
-    color: '#888',
-  },
-  signalBars: {
-    fontSize: 16,
     fontWeight: 'bold',
+    color: '#888',
+    marginBottom: 10,
   },
-  connectArrow: {
-    fontSize: 32,
+  techInfoText: {
+    fontSize: 12,
     color: '#666',
-    marginLeft: 8,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#888',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  emptyIcon: {
-    fontSize: 80,
-    marginBottom: 20,
-  },
-  emptyText: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#fff',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#888',
-    textAlign: 'center',
+    marginBottom: 4,
+    fontFamily: 'monospace',
   },
 });

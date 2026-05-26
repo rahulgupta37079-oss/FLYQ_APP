@@ -1,0 +1,22 @@
+#!/bin/bash
+
+echo "================================================"
+echo "  Build FLYQ v2.1.2 - ESP-Drone Protocol"
+echo "================================================"
+echo ""
+echo "✅ Changes in this version:"
+echo "   - Implemented ESP-Drone-Android UDP protocol"
+echo "   - NO MORE Buffer errors!"
+echo "   - Proper CRTP packet format"
+echo "   - Checksum validation"
+echo "   - Correct ports: 2399 (app) / 2390 (drone)"
+echo ""
+echo "🚀 To build:"
+echo ""
+echo "1. Run: npx eas-cli login"
+echo "2. Run: npx eas-cli build --platform android --profile preview"
+echo "3. Wait 5-7 minutes"
+echo "4. Get APK with QR code!"
+echo ""
+echo "================================================"
+
