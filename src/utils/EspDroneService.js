@@ -26,8 +26,10 @@ class EspDroneService {
   async connect(droneIP = null) {
     return new Promise((resolve, reject) => {
       try {
+        // If already connected, disconnect first
         if (this.socket) {
-          throw new Error('Connection already started');
+          console.log('[EspDrone] Disconnecting existing connection');
+          this.disconnect();
         }
 
         // Use provided IP or default
@@ -36,6 +38,15 @@ class EspDroneService {
         }
 
         console.log(`[EspDrone] Connecting to ${this.DEVICE_ADDRESS}:${this.DEVICE_PORT}`);
+
+        // Set connection timeout
+        const connectionTimeout = setTimeout(() => {
+          if (!this.isConnected) {
+            console.log('[EspDrone] Connection timeout');
+            this.disconnect();
+            reject({ success: false, error: 'Connection timeout' });
+          }
+        }, 5000);
 
         // Create UDP socket
         this.socket = dgram.createSocket({
@@ -48,6 +59,7 @@ class EspDroneService {
 
         // Socket opened successfully
         this.socket.once('listening', () => {
+          clearTimeout(connectionTimeout);
           console.log('[EspDrone] Socket listening on port', this.APP_PORT);
           this.isConnected = true;
           
@@ -74,6 +86,7 @@ class EspDroneService {
 
         // Handle errors
         this.socket.on('error', (err) => {
+          clearTimeout(connectionTimeout);
           console.error('[EspDrone] Socket error:', err);
           this.disconnect();
           reject({ success: false, error: err.message });
@@ -90,6 +103,12 @@ class EspDroneService {
    * Disconnect from ESP Drone
    */
   disconnect() {
+    // Clear send interval
+    if (this.sendInterval) {
+      clearInterval(this.sendInterval);
+      this.sendInterval = null;
+    }
+
     if (this.socket) {
       try {
         this.socket.close();

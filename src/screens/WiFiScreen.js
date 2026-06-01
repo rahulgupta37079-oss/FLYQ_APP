@@ -58,20 +58,41 @@ export default function WiFiScreen({ navigation }) {
     setIsConnecting(true);
 
     try {
-      // Try to connect to drone UDP service
-      // ESP-Drone default IP: 192.168.43.42
-      const result = await espDroneService.connect('192.168.43.42');
+      // Try multiple common ESP-Drone IP addresses
+      const possibleIPs = ['192.168.43.42', '192.168.4.1'];
+      let connected = false;
       
-      if (result.success) {
-        setIsDroneConnected(true);
-        Alert.alert(
-          'Connected!',
-          'Successfully connected to ESP Drone',
-          [{ text: 'OK' }]
-        );
+      for (const ip of possibleIPs) {
+        console.log(`[WiFi] Trying to connect to ${ip}...`);
+        try {
+          const result = await Promise.race([
+            espDroneService.connect(ip),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Timeout')), 3000)
+            )
+          ]);
+          
+          if (result.success) {
+            setIsDroneConnected(true);
+            Alert.alert(
+              'Connected!',
+              `Successfully connected to ESP Drone at ${ip}`,
+              [{ text: 'OK' }]
+            );
+            connected = true;
+            break;
+          }
+        } catch (error) {
+          console.log(`[WiFi] Failed to connect to ${ip}:`, error.message);
+          // Try next IP
+        }
+      }
+      
+      if (!connected) {
+        console.log('[WiFi] Auto-connect failed for all IPs');
       }
     } catch (error) {
-      console.error('[WiFi] Auto-connect failed:', error);
+      console.error('[WiFi] Auto-connect error:', error);
     } finally {
       setIsConnecting(false);
     }
@@ -102,28 +123,47 @@ export default function WiFiScreen({ navigation }) {
     setIsConnecting(true);
 
     try {
-      // Get current network details
-      const droneIP = '192.168.43.42'; // ESP-Drone default
+      // Try multiple common ESP-Drone IP addresses
+      const possibleIPs = ['192.168.43.42', '192.168.4.1'];
+      let connected = false;
+      let connectedIP = null;
       
-      console.log('[WiFi] Connecting to drone at', droneIP);
-      const result = await espDroneService.connect(droneIP);
+      for (const ip of possibleIPs) {
+        console.log(`[WiFi] Trying to connect to ${ip}...`);
+        try {
+          const result = await Promise.race([
+            espDroneService.connect(ip),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Connection timeout')), 5000)
+            )
+          ]);
 
-      if (result.success) {
-        setIsDroneConnected(true);
-        Alert.alert(
-          'Success!',
-          `Connected to ESP Drone\nIP: ${droneIP}`,
-          [
-            {
-              text: 'Go to Control',
-              onPress: () => navigation.navigate('Control')
-            }
-          ]
-        );
-      } else {
+          if (result.success) {
+            setIsDroneConnected(true);
+            connectedIP = ip;
+            connected = true;
+            Alert.alert(
+              'Success!',
+              `Connected to ESP Drone\nIP: ${ip}`,
+              [
+                {
+                  text: 'Go to Control',
+                  onPress: () => navigation.navigate('Control')
+                }
+              ]
+            );
+            break;
+          }
+        } catch (error) {
+          console.log(`[WiFi] Failed at ${ip}:`, error.message);
+          // Try next IP
+        }
+      }
+
+      if (!connected) {
         Alert.alert(
           'Connection Failed',
-          result.error || 'Could not connect to drone. Make sure you are connected to the drone\'s WiFi network.',
+          'Could not connect to drone.\n\nTried IPs:\n- 192.168.43.42\n- 192.168.4.1\n\nMake sure:\n1. You are connected to drone WiFi\n2. Drone is powered on\n3. Check drone\'s IP address',
           [{ text: 'OK' }]
         );
       }
@@ -246,8 +286,8 @@ export default function WiFiScreen({ navigation }) {
         <Text style={styles.techInfoText}>Protocol: ESP-Drone CRTP/UDP</Text>
         <Text style={styles.techInfoText}>App Port: 2399</Text>
         <Text style={styles.techInfoText}>Drone Port: 2390</Text>
-        <Text style={styles.techInfoText}>Default IP: 192.168.43.42</Text>
-        <Text style={styles.techInfoText}>Version: 2.1.2</Text>
+        <Text style={styles.techInfoText}>Trying IPs: 192.168.43.42, 192.168.4.1</Text>
+        <Text style={styles.techInfoText}>Version: 2.1.3</Text>
       </View>
     </View>
   );
