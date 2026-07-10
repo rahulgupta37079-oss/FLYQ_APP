@@ -1,0 +1,13 @@
+import { chromium } from 'playwright';
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+await p.goto('http://localhost:3000', { waitUntil: 'networkidle' });
+await p.screenshot({ path: '/tmp/home.png' });
+await p.evaluate(() => window.__lw.go('control'));
+await p.evaluate(() => window.__lw.connectSim());
+await p.evaluate(() => window.__lw.toggleArm());
+await p.evaluate(() => document.getElementById('joy-left')._test.move(0, 0.7));
+await p.waitForTimeout(500);
+await p.screenshot({ path: '/tmp/control.png' });
+await b.close();
+console.log('shots done');

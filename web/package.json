@@ -1,0 +1,22 @@
+{
+  "name": "litewing-web",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "wrangler pages dev dist --ip 0.0.0.0 --port 3000",
+    "deploy": "npm run build && wrangler pages deploy dist",
+    "test": "node tests/run-tests.mjs"
+  },
+  "dependencies": {
+    "hono": "^4.6.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240925.0",
+    "@hono/vite-cloudflare-pages": "^0.4.2",
+    "playwright": "^1.61.1",
+    "vite": "^5.4.8",
+    "wrangler": "^3.78.0"
+  }
+}
